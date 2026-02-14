@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartSuper API Console</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #242734;
+      --border: #2e3145;
+      --text: #e4e6f0;
+      --text-muted: #8b8fa3;
+      --accent: #6c5ce7;
+      --accent-light: #a29bfe;
+      --green: #00b894;
+      --yellow: #fdcb6e;
+      --red: #e17055;
+      --blue: #74b9ff;
+      --orange: #f39c12;
+      --pink: #fd79a8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height:1.6; }
+    .header { background: linear-gradient(135deg, #1a1d27 0%, #2d1b69 100%); padding: 2rem 2rem 1.5rem; border-bottom: 1px solid var(--border); }
+    .header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .header h1 span { color: var(--accent-light); }
+    .header .subtitle { color: var(--text-muted); font-size: 0.95rem; }
+    .header .meta { display:flex; gap:1.5rem; margin-top:0.8rem; font-size:0.82rem; color:var(--text-muted); flex-wrap:wrap; }
+    .header .meta span { background:var(--surface); padding:0.25rem 0.7rem; border-radius:4px; }
+    .controls { display:flex; gap:1rem; padding:1rem 2rem; background:var(--surface); border-bottom:1px solid var(--border); flex-wrap:wrap; align-items:center; }
+    .search { flex:1; min-width:200px; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.6rem 1rem; color:var(--text); font-size:0.9rem; outline:none; }
+    .search:focus { border-color:var(--accent); }
+    .role-tabs { display:flex; gap:0.5rem; }
+    .role-tab { padding:0.5rem 1rem; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text-muted); cursor:pointer; font-size:0.85rem; font-weight:500; transition:all 0.2s; }
+    .role-tab:hover { border-color:var(--accent); color:var(--text); }
+    .role-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .status-filter { display:flex; gap:0.4rem; }
+    .status-btn { padding:0.4rem 0.8rem; border-radius:4px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; font-size:0.8rem; transition:all 0.2s; }
+    .status-btn:hover { border-color:var(--accent); }
+    .status-btn.active { border-color:var(--green); color:var(--green); }
+    .content { max-width:1400px; margin:0 auto; padding:1.5rem 2rem; }
+    .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:1rem; margin-bottom:2rem; }
+    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:1rem 1.2rem; }
+    .stat-card .number { font-size:1.8rem; font-weight:700; color:var(--accent-light); }
+    .stat-card .label { font-size:0.82rem; color:var(--text-muted); margin-top:0.2rem; }
+    .service-section { margin-bottom:2rem; }
+    .service-header { display:flex; align-items:center; gap:0.8rem; padding:1rem 1.2rem; background:var(--surface); border:1px solid var(--border); border-radius:8px 8px 0 0; cursor:pointer; user-select:none; }
+    .service-header:hover { background:var(--surface2); }
+    .service-header .icon { font-size:1.4rem; }
+    .service-header h2 { font-size:1.1rem; font-weight:600; flex:1; }
+    .service-header .badge { padding:0.2rem 0.6rem; border-radius:4px; font-size:0.75rem; font-weight:500; }
+    .service-header .count { color:var(--text-muted); font-size:0.85rem; }
+    .service-header .chevron { color:var(--text-muted); transition:transform 0.2s; }
+    .service-header.open .chevron { transform:rotate(90deg); }
+    .rpc-table { width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; overflow:hidden; }
+    .rpc-table thead th { text-align:left; padding:0.7rem 1rem; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); background:var(--surface2); border-bottom:1px solid var(--border); font-weight:600; }
+    .rpc-table tbody tr { border-bottom:1px solid var(--border); transition:background 0.15s; }
+    .rpc-table tbody tr:last-child { border-bottom:none; }
+    .rpc-table tbody tr:hover { background:var(--surface2); }
+    .rpc-table td { padding:0.7rem 1rem; font-size:0.88rem; vertical-align:top; }
+    .method-badge { display:inline-block; padding:0.15rem 0.5rem; border-radius:3px; font-size:0.75rem; font-weight:700; min-width:50px; text-align:center; font-family:'SF Mono',monospace; }
+    .method-get { background:rgba(0,184,148,0.15); color:var(--green); }
+    .method-post { background:rgba(116,185,255,0.15); color:var(--blue); }
+    .method-put { background:rgba(253,203,110,0.15); color:var(--yellow); }
+    .method-patch { background:rgba(243,156,18,0.15); color:var(--orange); }
+    .method-delete { background:rgba(225,112,85,0.15); color:var(--red); }
+    .method-stream { background:rgba(253,121,168,0.15); color:var(--pink); }
+    .method-sse { background:rgba(253,121,168,0.15); color:var(--pink); }
+    .endpoint { font-family:'SF Mono',Consolas,monospace; font-size:0.82rem; color:var(--accent-light); }
+    .visibility-tag { display:inline-block; padding:0.15rem 0.5rem; border-radius:3px; font-size:0.72rem; font-weight:600; }
+    .vis-external { background:rgba(0,184,148,0.15); color:var(--green); }
+    .vis-ui { background:rgba(116,185,255,0.15); color:var(--blue); }
+    .vis-internal { background:rgba(253,203,110,0.15); color:var(--yellow); }
+    .status-tag { display:inline-block; padding:0.15rem 0.5rem; border-radius:3px; font-size:0.72rem; font-weight:600; }
+    .status-live { background:rgba(0,184,148,0.15); color:var(--green); }
+    .status-beta { background:rgba(116,185,255,0.15); color:var(--blue); }
+    .status-planned { background:rgba(253,203,110,0.15); color:var(--yellow); }
+    .status-deprecated { background:rgba(225,112,85,0.15); color:var(--red); }
+    .auth-tag { font-size:0.78rem; color:var(--text-muted); }
+    .auth-tag .lock { margin-right:0.3rem; }
+    .rpc-desc { font-size:0.82rem; color:var(--text-muted); margin-top:0.2rem; }
+    .hidden { display:none !important; }
+    .legend { display:flex; gap:1.5rem; padding:0.8rem 2rem; background:var(--surface); border-bottom:1px solid var(--border); flex-wrap:wrap; align-items:center; font-size:0.82rem; }
+    .legend-title { color:var(--text-muted); font-weight:600; }
+    .legend-item { display:flex; align-items:center; gap:0.4rem; }
+    .footer { text-align:center; padding:2rem; color:var(--text-muted); font-size:0.82rem; border-top:1px solid var(--border); margin-top:2rem; }
+    .no-results { text-align:center; padding:3rem; color:var(--text-muted); font-size:1rem; }
+    .expand-toggle { display:flex; gap:0.5rem; }
+    .expand-btn { padding:0.4rem 0.8rem; border-radius:4px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; font-size:0.8rem; }
+    .expand-btn:hover { border-color:var(--accent); color:var(--text); }
+    .proto-ref { font-family:'SF Mono',monospace; font-size:0.75rem; color:var(--text-muted); }
+    @media(max-width:768px) {
+      .controls { flex-direction:column; }
+      .rpc-table { font-size:0.82rem; }
+      .rpc-table td, .rpc-table th { padding:0.5rem; }
+      .stats { grid-template-columns:repeat(2,1fr); }
+    }
+    .detail-row { background:var(--bg) !important; }
+    .detail-content { padding:1rem 1.5rem; font-size:0.85rem; }
+    .detail-content h4 { color:var(--accent-light); margin-bottom:0.5rem; font-size:0.9rem; }
+    .detail-content .field-table { width:100%; border-collapse:collapse; margin:0.5rem 0 1rem; }
+    .detail-content .field-table th { text-align:left; font-size:0.75rem; color:var(--text-muted); padding:0.4rem 0.8rem; border-bottom:1px solid var(--border); }
+    .detail-content .field-table td { padding:0.4rem 0.8rem; font-size:0.82rem; border-bottom:1px solid rgba(46,49,69,0.5); font-family:'SF Mono',monospace; }
+    .detail-content .field-table td:first-child { color:var(--accent-light); }
+    .detail-content .field-table td:nth-child(2) { color:var(--green); }
+    .disclaimer { background:rgba(225,112,85,0.1); border:1px solid rgba(225,112,85,0.3); border-radius:6px; padding:0.8rem 1rem; margin:1rem 2rem; font-size:0.82rem; color:var(--red); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔐 Smart<span>Super</span> API Console</h1>
+    <div class="subtitle">gRPC + REST API Reference — Role-Based Views</div>
+    <div class="meta">
+      <span>📌 Version: v1.0.0</span>
+      <span>📅 Updated: 2026-02-15</span>
+      <span>🔒 Auth: OAuth 2.0 + JWT</span>
+      <span>🌏 Region: australia-southeast1</span>
+      <span>📡 Transport: gRPC (HTTP/2) + REST (TLS 1.3)</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <input type="text" class="search" id="searchInput" placeholder="🔍 Search APIs — e.g. 'fund', 'tax', 'login', 'rollover'...">
+    <div class="role-tabs">
+      <button class="role-tab active" data-role="all" onclick="setRole('all',this)">🌐 All APIs</button>
+      <button class="role-tab" data-role="external" onclick="setRole('external',this)">🤝 External / Vendor</button>
+      <button class="role-tab" data-role="ui" onclick="setRole('ui',this)">📱 UI / Mobile</button>
+      <button class="role-tab" data-role="internal" onclick="setRole('internal',this)">⚙️ Internal / Ops</button>
+    </div>
+    <div class="status-filter">
+      <button class="status-btn active" data-status="all" onclick="setStatus('all',this)">All</button>
+      <button class="status-btn" data-status="live" onclick="setStatus('live',this)">🟢 Live</button>
+      <button class="status-btn" data-status="beta" onclick="setStatus('beta',this)">🔵 Beta</button>
+      <button class="status-btn" data-status="planned" onclick="setStatus('planned',this)">🟡 Planned</button>
+    </div>
+    <div class="expand-toggle">
+      <button class="expand-btn" onclick="expandAll()">▼ Expand All</button>
+      <button class="expand-btn" onclick="collapseAll()">▶ Collapse All</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-title">Visibility:</span>
+    <span class="legend-item"><span class="visibility-tag vis-external">External</span> Vendor-safe</span>
+    <span class="legend-item"><span class="visibility-tag vis-ui">UI</span> Mobile app</span>
+    <span class="legend-item"><span class="visibility-tag vis-internal">Internal</span> Service-to-service</span>
+    <span class="legend-title" style="margin-left:1rem">Methods:</span>
+    <span class="legend-item"><span class="method-badge method-get">GET</span></span>
+    <span class="legend-item"><span class="method-badge method-post">POST</span></span>
+    <span class="legend-item"><span class="method-badge method-put">PUT</span></span>
+    <span class="legend-item"><span class="method-badge method-patch">PATCH</span></span>
+    <span class="legend-item"><span class="method-badge method-delete">DELETE</span></span>
+    <span class="legend-item"><span class="method-badge method-stream">SSE</span></span>
+  </div>
+
+  <div id="disclaimer" class="disclaimer hidden">
+    ⚠️ <strong>External / Vendor View:</strong> You are viewing only the APIs available for third-party integration. Internal service-to-service and mobile-specific APIs are hidden. Contact <strong>api@smartsuper.com.au</strong> for API key access.
+  </div>
+
+  <div class="content">
+    <div class="stats" id="stats"></div>
+    <div id="services"></div>
+    <div id="noResults" class="no-results hidden">No APIs match your search criteria.</div>
+  </div>
+
+  <div class="footer">
+    <p>SmartSuper API Console v1.0.0 — Auto-generated from Protocol Buffer definitions</p>
+    <p>Proto source: <code>smart-super-api/proto/smartsuper/</code> — Last sync: 2026-02-15</p>
+    <p>© 2026 SmartSuper Pty Ltd — ABN 12 345 678 901 — AFSL 123456</p>
+  </div>
+
+<script>
+const API_DATA = [
+  {
+    service: "UserService",
+    icon: "👤",
+    proto: "proto/smartsuper/user/v1/user_service.proto",
+    description: "User registration, authentication, profile, KYC, and consent management",
+    rpcs: [
+      { name:"Register", method:"POST", rest:"/v1/auth/register", desc:"Register new user account", visibility:"external", status:"live", auth:"none", scopes:[] },
+      { name:"Login", method:"POST", rest:"/v1/auth/login", desc:"Authenticate user and return tokens", visibility:"external", status:"live", auth:"none", scopes:[] },
+      { name:"RefreshToken", method:"POST", rest:"/v1/auth/refresh", desc:"Exchange refresh token for new access token", visibility:"external", status:"live", auth:"bearer", scopes:["auth:refresh"] },
+      { name:"Logout", method:"POST", rest:"/v1/auth/logout", desc:"Invalidate user session(s)", visibility:"ui", status:"live", auth:"bearer", scopes:["user:read"] },
+      { name:"EnableMFA", method:"POST", rest:"/v1/auth/mfa/setup", desc:"Set up multi-factor authentication (TOTP/SMS/Biometric)", visibility:"ui", status:"live", auth:"bearer", scopes:["user:write"] },
+      { name:"VerifyMFA", method:"POST", rest:"/v1/auth/mfa/verify", desc:"Validate MFA code and complete authentication", visibility:"external", status:"live", auth:"bearer", scopes:["auth:mfa"] },
+      { name:"GetProfile", method:"GET", rest:"/v1/users/me", desc:"Retrieve authenticated user's profile", visibility:"ui", status:"live", auth:"bearer", scopes:["user:read"] },
+      { name:"UpdateProfile", method:"PATCH", rest:"/v1/users/me", desc:"Modify user profile fields (uses FieldMask)", visibility:"ui", status:"live", auth:"bearer", scopes:["user:write"] },
+      { name:"DeleteAccount", method:"DELETE", rest:"/v1/users/me", desc:"Permanently delete user account and data", visibility:"ui", status:"live", auth:"bearer", scopes:["user:delete"] },
+      { name:"SubmitKYC", method:"POST", rest:"/v1/users/me/kyc", desc:"Submit identity verification documents (licence, passport, medicare)", visibility:"ui", status:"live", auth:"bearer", scopes:["user:write"] },
+      { name:"GetKYCStatus", method:"GET", rest:"/v1/users/me/kyc/status", desc:"Retrieve current KYC verification status", visibility:"ui", status:"live", auth:"bearer", scopes:["user:read"] },
+      { name:"ListConsents", method:"GET", rest:"/v1/users/me/consents", desc:"List all consent records for the user", visibility:"ui", status:"live", auth:"bearer", scopes:["user:read"] },
+      { name:"GrantConsent", method:"POST", rest:"/v1/users/me/consents", desc:"Record user consent for data processing", visibility:"external", status:"live", auth:"bearer", scopes:["user:write"] },
+      { name:"RevokeConsent", method:"DELETE", rest:"/v1/users/me/consents/{consent_id}", desc:"Withdraw a previously granted consent", visibility:"external", status:"live", auth:"bearer", scopes:["user:write"] },
+    ]
+  },
+  {
+    service: "SuperFundService",
+    icon: "💰",
+    proto: "proto/smartsuper/super/v1/super_fund_service.proto",
+    description: "Super fund account linking, balances, contributions, fees, insurance, performance, and fund comparison",
+    rpcs: [
+      { name:"LinkAccount", method:"POST", rest:"/v1/super/accounts", desc:"Link a new super fund account via USI + member number", visibility:"ui", status:"live", auth:"bearer", scopes:["super:write"] },
+      { name:"ListAccounts", method:"GET", rest:"/v1/super/accounts", desc:"List all linked super fund accounts with total balance", visibility:"ui", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"GetAccount", method:"GET", rest:"/v1/super/accounts/{account_id}", desc:"Get details of a specific super fund account", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"UnlinkAccount", method:"DELETE", rest:"/v1/super/accounts/{account_id}", desc:"Remove the link to a super fund account", visibility:"ui", status:"live", auth:"bearer", scopes:["super:write"] },
+      { name:"SyncAccount", method:"POST", rest:"/v1/super/accounts/{account_id}/sync", desc:"Trigger data sync with the super fund", visibility:"internal", status:"live", auth:"service", scopes:["super:sync"] },
+      { name:"GetBalance", method:"GET", rest:"/v1/super/accounts/{account_id}/balance", desc:"Get current balance with investment allocation breakdown", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"GetBalanceHistory", method:"GET", rest:"/v1/super/accounts/{account_id}/balance/history", desc:"Historical balance snapshots (daily/weekly/monthly/quarterly/yearly)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"ListContributions", method:"GET", rest:"/v1/super/accounts/{account_id}/contributions", desc:"List contribution records (employer SG, salary sacrifice, personal, etc.)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"GetContributionSummary", method:"GET", rest:"/v1/super/accounts/{account_id}/contributions/summary", desc:"Contribution summary by type for a financial year with cap tracking", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"GetFeeBreakdown", method:"GET", rest:"/v1/super/accounts/{account_id}/fees", desc:"Itemised fee schedule (admin, investment, buy/sell spread)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"GetInsuranceDetails", method:"GET", rest:"/v1/super/accounts/{account_id}/insurance", desc:"Insurance cover details (life, TPD, income protection)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"GetPerformance", method:"GET", rest:"/v1/super/accounts/{account_id}/performance", desc:"Investment performance metrics with benchmark comparison", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"SearchFunds", method:"GET", rest:"/v1/super/funds", desc:"Search APRA fund registry (filter by type, risk, fees)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"GetFundDetails", method:"GET", rest:"/v1/super/funds/{fund_id}", desc:"Full fund details (options, fees, insurance, performance, PDS)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"CompareFunds", method:"POST", rest:"/v1/super/funds/compare", desc:"Side-by-side comparison of 2-4 funds with AI recommendation", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
+      { name:"InitiateRollover", method:"POST", rest:"/v1/super/rollovers", desc:"Start fund rollover process (full or partial)", visibility:"ui", status:"beta", auth:"bearer", scopes:["super:write"] },
+      { name:"GetRolloverStatus", method:"GET", rest:"/v1/super/rollovers/{rollover_id}", desc:"Track rollover progress and status", visibility:"ui", status:"beta", auth:"bearer", scopes:["super:read"] },
+    ]
+  },
+  {
+    service: "TaxService",
+    icon: "🧾",
+    proto: "proto/smartsuper/tax/v1/tax_service.proto",
+    description: "Tax estimation, Division 293, contribution caps, deduction tracking, and tax reporting",
+    rpcs: [
+      { name:"CalculateTaxEstimate", method:"POST", rest:"/v1/tax/estimate", desc:"Calculate comprehensive tax estimate including contributions tax, Division 293, and savings", visibility:"external", status:"live", auth:"bearer", scopes:["tax:read"] },
+      { name:"GetTaxEstimate", method:"GET", rest:"/v1/tax/estimate/{estimate_id}", desc:"Retrieve a previously calculated tax estimate", visibility:"external", status:"live", auth:"bearer", scopes:["tax:read"] },
+      { name:"GetContributionCaps", method:"GET", rest:"/v1/tax/contributions/caps", desc:"Contribution cap details with carry-forward and bring-forward tracking", visibility:"external", status:"live", auth:"bearer", scopes:["tax:read"] },
+      { name:"AssessDivision293", method:"POST", rest:"/v1/tax/division293", desc:"Calculate Division 293 tax liability (income > $250k threshold)", visibility:"external", status:"live", auth:"bearer", scopes:["tax:read"] },
+      { name:"GetDivision293History", method:"GET", rest:"/v1/tax/division293/history", desc:"Historical Division 293 assessment records", visibility:"ui", status:"live", auth:"bearer", scopes:["tax:read"] },
+      { name:"CreateDeductionNotice", method:"POST", rest:"/v1/tax/deductions", desc:"Lodge personal contribution deduction notice (s290-170)", visibility:"ui", status:"live", auth:"bearer", scopes:["tax:write"] },
+      { name:"ListDeductions", method:"GET", rest:"/v1/tax/deductions", desc:"List deduction notices for a financial year", visibility:"ui", status:"live", auth:"bearer", scopes:["tax:read"] },
+      { name:"AcknowledgeDeduction", method:"POST", rest:"/v1/tax/deductions/{deduction_id}/acknowledge", desc:"Record fund acknowledgement of deduction notice", visibility:"internal", status:"live", auth:"service", scopes:["tax:write"] },
+      { name:"GetAnnualTaxReport", method:"GET", rest:"/v1/tax/report/{financial_year}", desc:"Generate annual tax report with ATO pre-fill data", visibility:"external", status:"live", auth:"bearer", scopes:["tax:read"] },
+      { name:"GetTaxOptimisations", method:"GET", rest:"/v1/tax/optimisations", desc:"AI-generated tax optimisation strategies with savings estimates", visibility:"ui", status:"beta", auth:"bearer", scopes:["tax:read","ai:read"] },
+    ]
+  },
+  {
+    service: "AIInsightsService",
+    icon: "🤖",
+    proto: "proto/smartsuper/ai/v1/ai_insights_service.proto",
+    description: "AI-powered recommendations, chat assistant, retirement projections, anomaly detection, and statement parsing",
+    rpcs: [
+      { name:"GetRecommendations", method:"GET", rest:"/v1/ai/recommendations", desc:"Get personalised AI recommendations (contribution, investment, insurance)", visibility:"external", status:"live", auth:"bearer", scopes:["ai:read"] },
+      { name:"SubmitRecommendationFeedback", method:"POST", rest:"/v1/ai/recommendations/{id}/feedback", desc:"Submit feedback on a recommendation (helpful/not_helpful/acted_on)", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:write"] },
+      { name:"CreateChatSession", method:"POST", rest:"/v1/ai/chat/sessions", desc:"Create AI chat session for super questions", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:read"] },
+      { name:"SendMessage", method:"POST", rest:"/v1/ai/chat/sessions/{session_id}/messages", desc:"Send message to AI chat assistant", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:read"] },
+      { name:"StreamMessage", method:"SSE", rest:"/v1/ai/chat/sessions/{session_id}/stream", desc:"Stream AI chat response (server-sent events / gRPC server streaming)", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:read"] },
+      { name:"GetChatHistory", method:"GET", rest:"/v1/ai/chat/sessions/{session_id}/messages", desc:"Retrieve chat message history for a session", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:read"] },
+      { name:"PredictRetirement", method:"POST", rest:"/v1/ai/predictions/retirement", desc:"Monte Carlo retirement projection (pessimistic/base/optimistic scenarios)", visibility:"external", status:"live", auth:"bearer", scopes:["ai:read"] },
+      { name:"PredictFundPerformance", method:"POST", rest:"/v1/ai/predictions/fund-performance", desc:"ML-based fund performance prediction with confidence intervals", visibility:"external", status:"beta", auth:"bearer", scopes:["ai:read"] },
+      { name:"GetAnomalies", method:"GET", rest:"/v1/ai/anomalies", desc:"Detect anomalies (missing contributions, unusual fees, etc.)", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:read"] },
+      { name:"DismissAnomaly", method:"POST", rest:"/v1/ai/anomalies/{anomaly_id}/dismiss", desc:"Dismiss a detected anomaly with reason", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:write"] },
+      { name:"ParseStatement", method:"POST", rest:"/v1/ai/statements/parse", desc:"Upload and parse super statement PDF using Document AI + Gemini", visibility:"external", status:"live", auth:"bearer", scopes:["statement:upload"] },
+      { name:"GetParseStatus", method:"GET", rest:"/v1/ai/statements/parse/{job_id}/status", desc:"Check statement parsing progress", visibility:"ui", status:"live", auth:"bearer", scopes:["statement:upload"] },
+      { name:"GetParsedResult", method:"GET", rest:"/v1/ai/statements/parse/{job_id}/result", desc:"Get parsed statement data (fund, balance, contributions, fees, insurance)", visibility:"external", status:"live", auth:"bearer", scopes:["statement:upload"] },
+    ]
+  },
+  {
+    service: "DocumentService",
+    icon: "📄",
+    proto: "proto/smartsuper/document/v1/document_service.proto",
+    description: "Document upload, statement parsing pipeline (Document AI + Gemini), and document management",
+    rpcs: [
+      { name:"UploadStatement", method:"POST", rest:"/v1/statements/upload", desc:"Upload super statement PDF (max 10MB) with idempotency key", visibility:"external", status:"live", auth:"bearer", scopes:["statement:upload"] },
+      { name:"GetParseStatus", method:"GET", rest:"/v1/statements/{job_id}/status", desc:"Get parsing pipeline status (queued → extracting → structuring → validating → completed)", visibility:"external", status:"live", auth:"bearer", scopes:["statement:upload"] },
+      { name:"GetParsedStatement", method:"GET", rest:"/v1/statements/{document_id}", desc:"Get parsed statement with confidence scores per field", visibility:"external", status:"live", auth:"bearer", scopes:["statement:upload"] },
+      { name:"ListDocuments", method:"GET", rest:"/v1/statements", desc:"List uploaded documents with optional financial year filter", visibility:"ui", status:"live", auth:"bearer", scopes:["statement:upload"] },
+      { name:"GetDocument", method:"GET", rest:"/v1/statements/{document_id}/meta", desc:"Get document metadata (size, state, fund, financial year)", visibility:"ui", status:"live", auth:"bearer", scopes:["statement:upload"] },
+      { name:"DeleteDocument", method:"DELETE", rest:"/v1/statements/{document_id}", desc:"Delete an uploaded document", visibility:"ui", status:"live", auth:"bearer", scopes:["statement:upload"] },
+      { name:"RetryParsing", method:"POST", rest:"/v1/statements/{document_id}/retry", desc:"Retry parsing for a failed document", visibility:"internal", status:"live", auth:"service", scopes:["statement:admin"] },
+    ]
+  },
+  {
+    service: "NotificationService",
+    icon: "🔔",
+    proto: "proto/smartsuper/notification/v1/notification_service.proto",
+    description: "Multi-channel notifications (push/email/SMS), device registration, and preferences",
+    rpcs: [
+      { name:"ListNotifications", method:"GET", rest:"/v1/notifications", desc:"List notifications with status/category filter and cursor pagination", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:read"] },
+      { name:"MarkAsRead", method:"POST", rest:"/v1/notifications/{notification_id}/read", desc:"Mark a single notification as read", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:write"] },
+      { name:"MarkAllAsRead", method:"POST", rest:"/v1/notifications/read-all", desc:"Mark all notifications as read", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:write"] },
+      { name:"GetUnreadCount", method:"GET", rest:"/v1/notifications/unread-count", desc:"Get unread notification count by category", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:read"] },
+      { name:"GetPreferences", method:"GET", rest:"/v1/notifications/preferences", desc:"Get notification preferences (push/email/SMS per category)", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:read"] },
+      { name:"UpdatePreferences", method:"PUT", rest:"/v1/notifications/preferences", desc:"Update notification preferences including quiet hours", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:write"] },
+      { name:"RegisterDevice", method:"POST", rest:"/v1/notifications/devices", desc:"Register iOS device for push notifications (APNs token)", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:write"] },
+      { name:"ListDevices", method:"GET", rest:"/v1/notifications/devices", desc:"List registered devices", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:read"] },
+      { name:"UnregisterDevice", method:"DELETE", rest:"/v1/notifications/devices/{device_id}", desc:"Unregister a device from push notifications", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:write"] },
+      { name:"SendNotification", method:"POST", rest:"/v1/internal/notifications/send", desc:"Service-to-service: Send notification to a specific user", visibility:"internal", status:"live", auth:"service", scopes:["notification:admin"] },
+      { name:"SendBulkNotification", method:"POST", rest:"/v1/internal/notifications/send-bulk", desc:"Service-to-service: Send bulk notifications to multiple users", visibility:"internal", status:"live", auth:"service", scopes:["notification:admin"] },
+    ]
+  },
+  {
+    service: "ComplianceService",
+    icon: "🛡️",
+    proto: "proto/smartsuper/compliance/v1/compliance_service.proto",
+    description: "Regulatory compliance, audit logging, AML/CTF monitoring, privacy requests (APRA, ATO, ASIC, OAIC, AUSTRAC)",
+    rpcs: [
+      { name:"GetAuditLog", method:"GET", rest:"/v1/admin/audit/{entry_id}", desc:"Get a specific audit log entry", visibility:"internal", status:"live", auth:"service", scopes:["admin:audit"] },
+      { name:"SearchAuditLogs", method:"GET", rest:"/v1/admin/audit", desc:"Search audit logs by user, resource, event type, and date range", visibility:"internal", status:"live", auth:"service", scopes:["admin:audit"] },
+      { name:"ListUserConsents", method:"GET", rest:"/v1/admin/compliance/consents/{user_id}", desc:"List all consent records for a specific user (admin view)", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
+      { name:"GetConsentAuditTrail", method:"GET", rest:"/v1/admin/compliance/consents/{user_id}/audit", desc:"Full consent history/versions for a user and consent type", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
+      { name:"SubmitPrivacyRequest", method:"POST", rest:"/v1/privacy/requests", desc:"Submit privacy request (access/correction/deletion/export/restriction)", visibility:"external", status:"live", auth:"bearer", scopes:["user:read"] },
+      { name:"GetPrivacyRequestStatus", method:"GET", rest:"/v1/privacy/requests/{request_id}", desc:"Track privacy request status (30-day deadline per Privacy Act)", visibility:"external", status:"live", auth:"bearer", scopes:["user:read"] },
+      { name:"ListPrivacyRequests", method:"GET", rest:"/v1/privacy/requests", desc:"List all privacy requests", visibility:"ui", status:"live", auth:"bearer", scopes:["user:read"] },
+      { name:"GetAMLStatus", method:"GET", rest:"/v1/admin/compliance/aml/{user_id}", desc:"AML/CTF risk assessment status (AUSTRAC compliance)", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
+      { name:"ReportSuspiciousActivity", method:"POST", rest:"/v1/admin/compliance/aml/suspicious", desc:"Report suspicious activity to AUSTRAC", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
+      { name:"GenerateRegulatoryReport", method:"POST", rest:"/v1/admin/compliance/reports", desc:"Generate regulatory report (APRA CPS234, OAIC NDB, AUSTRAC AML, etc.)", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
+      { name:"ListRegulatoryReports", method:"GET", rest:"/v1/admin/compliance/reports", desc:"List generated regulatory reports", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
+      { name:"GetRetentionPolicy", method:"GET", rest:"/v1/admin/compliance/retention", desc:"Get data retention policies per category with regulatory basis", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
+    ]
+  },
+  {
+    service: "Health",
+    icon: "💚",
+    proto: "proto/smartsuper/common/v1/common.proto",
+    description: "gRPC Health Checking Protocol — service health and readiness",
+    rpcs: [
+      { name:"Check", method:"GET", rest:"/v1/health", desc:"Health check (SERVING / NOT_SERVING / UNKNOWN)", visibility:"external", status:"live", auth:"none", scopes:[] },
+      { name:"Watch", method:"SSE", rest:"/v1/health/watch", desc:"Stream health status changes (gRPC server streaming)", visibility:"internal", status:"live", auth:"service", scopes:[] },
+    ]
+  }
+];
+
+let currentRole = 'all';
+let currentStatus = 'all';
+let currentSearch = '';
+let openSections = new Set();
+
+// Init: open all sections
+API_DATA.forEach((s,i) => openSections.add(i));
+
+function setRole(role, btn) {
+  currentRole = role;
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('disclaimer').classList.toggle('hidden', role !== 'external');
+  render();
+}
+
+function setStatus(status, btn) {
+  currentStatus = status;
+  document.querySelectorAll('.status-btn').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function expandAll() { API_DATA.forEach((s,i) => openSections.add(i)); render(); }
+function collapseAll() { openSections.clear(); render(); }
+
+function toggleSection(idx) {
+  if (openSections.has(idx)) openSections.delete(idx); else openSections.add(idx);
+  render();
+}
+
+function matchesVisibility(rpc) {
+  if (currentRole === 'all') return true;
+  if (currentRole === 'external') return rpc.visibility === 'external';
+  if (currentRole === 'ui') return rpc.visibility === 'ui' || rpc.visibility === 'external';
+  if (currentRole === 'internal') return true;
+  return true;
+}
+
+function matchesStatus(rpc) {
+  return currentStatus === 'all' || rpc.status === currentStatus;
+}
+
+function matchesSearch(rpc, service) {
+  if (!currentSearch) return true;
+  const q = currentSearch.toLowerCase();
+  return rpc.name.toLowerCase().includes(q) ||
+         rpc.rest.toLowerCase().includes(q) ||
+         rpc.desc.toLowerCase().includes(q) ||
+         service.service.toLowerCase().includes(q) ||
+         rpc.scopes.some(s => s.toLowerCase().includes(q));
+}
+
+function getMethodClass(method) {
+  return 'method-' + method.toLowerCase();
+}
+
+function render() {
+  let totalRPCs = 0, visibleRPCs = 0, liveCount = 0, betaCount = 0, plannedCount = 0;
+  let serviceCount = 0;
+
+  const servicesHTML = API_DATA.map((svc, idx) => {
+    const filteredRPCs = svc.rpcs.filter(r => matchesVisibility(r) && matchesStatus(r) && matchesSearch(r, svc));
+    totalRPCs += svc.rpcs.length;
+    visibleRPCs += filteredRPCs.length;
+    filteredRPCs.forEach(r => {
+      if (r.status === 'live') liveCount++;
+      else if (r.status === 'beta') betaCount++;
+      else if (r.status === 'planned') plannedCount++;
+    });
+
+    if (filteredRPCs.length === 0) return '';
+    serviceCount++;
+
+    const isOpen = openSections.has(idx);
+    const visTag = currentRole !== 'all' ? `<span class="badge visibility-tag vis-${currentRole}">${currentRole}</span>` : '';
+
+    let tableHTML = '';
+    if (isOpen) {
+      const rows = filteredRPCs.map(r => `
+        <tr>
+          <td><span class="method-badge ${getMethodClass(r.method)}">${r.method}</span></td>
+          <td>
+            <div class="endpoint">${r.rest}</div>
+            <div class="rpc-desc">${r.desc}</div>
+          </td>
+          <td><code style="font-size:0.82rem;color:var(--accent-light)">${r.name}</code></td>
+          <td><span class="visibility-tag vis-${r.visibility}">${r.visibility}</span></td>
+          <td><span class="status-tag status-${r.status}">${r.status}</span></td>
+          <td><span class="auth-tag">${r.auth === 'none' ? '🔓 Public' : r.auth === 'service' ? '🔑 Service' : '🔒 ' + r.scopes.join(', ')}</span></td>
+        </tr>
+      `).join('');
+
+      tableHTML = `<table class="rpc-table">
+        <thead><tr><th style="width:70px">Method</th><th>Endpoint</th><th>gRPC RPC</th><th style="width:80px">Scope</th><th style="width:70px">Status</th><th>Auth / Scopes</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    }
+
+    return `<div class="service-section">
+      <div class="service-header ${isOpen ? 'open' : ''}" onclick="toggleSection(${idx})">
+        <span class="icon">${svc.icon}</span>
+        <h2>${svc.service}</h2>
+        ${visTag}
+        <span class="count">${filteredRPCs.length} endpoint${filteredRPCs.length !== 1 ? 's' : ''}</span>
+        <span class="proto-ref">${svc.proto}</span>
+        <span class="chevron">▶</span>
+      </div>
+      ${tableHTML}
+    </div>`;
+  }).filter(Boolean).join('');
+
+  document.getElementById('services').innerHTML = servicesHTML;
+  document.getElementById('noResults').classList.toggle('hidden', servicesHTML.length > 0);
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card"><div class="number">${serviceCount}</div><div class="label">Services</div></div>
+    <div class="stat-card"><div class="number">${visibleRPCs}</div><div class="label">Endpoints Visible</div></div>
+    <div class="stat-card"><div class="number" style="color:var(--green)">${liveCount}</div><div class="label">🟢 Live</div></div>
+    <div class="stat-card"><div class="number" style="color:var(--blue)">${betaCount}</div><div class="label">🔵 Beta</div></div>
+    <div class="stat-card"><div class="number" style="color:var(--yellow)">${plannedCount}</div><div class="label">🟡 Planned</div></div>
+    <div class="stat-card"><div class="number">${totalRPCs}</div><div class="label">Total (All Roles)</div></div>
+  `;
+}
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  currentSearch = e.target.value;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
