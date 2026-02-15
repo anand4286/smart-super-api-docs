@@ -9,6 +9,7 @@
       --bg: #0f1117;
       --surface: #1a1d27;
       --surface2: #242734;
+      --surface3: #2d3044;
       --border: #2e3145;
       --text: #e4e6f0;
       --text-muted: #8b8fa3;
@@ -20,6 +21,7 @@
       --blue: #74b9ff;
       --orange: #f39c12;
       --pink: #fd79a8;
+      --cyan: #81ecec;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height:1.6; }
@@ -56,9 +58,9 @@
     .service-header.open .chevron { transform:rotate(90deg); }
     .rpc-table { width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; overflow:hidden; }
     .rpc-table thead th { text-align:left; padding:0.7rem 1rem; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); background:var(--surface2); border-bottom:1px solid var(--border); font-weight:600; }
-    .rpc-table tbody tr { border-bottom:1px solid var(--border); transition:background 0.15s; }
-    .rpc-table tbody tr:last-child { border-bottom:none; }
-    .rpc-table tbody tr:hover { background:var(--surface2); }
+    .rpc-table tbody tr.rpc-row { border-bottom:1px solid var(--border); transition:background 0.15s; cursor:pointer; }
+    .rpc-table tbody tr.rpc-row:hover { background:var(--surface2); }
+    .rpc-table tbody tr.rpc-row.expanded { background:var(--surface2); border-bottom:none; }
     .rpc-table td { padding:0.7rem 1rem; font-size:0.88rem; vertical-align:top; }
     .method-badge { display:inline-block; padding:0.15rem 0.5rem; border-radius:3px; font-size:0.75rem; font-weight:700; min-width:50px; text-align:center; font-family:'SF Mono',monospace; }
     .method-get { background:rgba(0,184,148,0.15); color:var(--green); }
@@ -66,7 +68,6 @@
     .method-put { background:rgba(253,203,110,0.15); color:var(--yellow); }
     .method-patch { background:rgba(243,156,18,0.15); color:var(--orange); }
     .method-delete { background:rgba(225,112,85,0.15); color:var(--red); }
-    .method-stream { background:rgba(253,121,168,0.15); color:var(--pink); }
     .method-sse { background:rgba(253,121,168,0.15); color:var(--pink); }
     .endpoint { font-family:'SF Mono',Consolas,monospace; font-size:0.82rem; color:var(--accent-light); }
     .visibility-tag { display:inline-block; padding:0.15rem 0.5rem; border-radius:3px; font-size:0.72rem; font-weight:600; }
@@ -77,9 +78,7 @@
     .status-live { background:rgba(0,184,148,0.15); color:var(--green); }
     .status-beta { background:rgba(116,185,255,0.15); color:var(--blue); }
     .status-planned { background:rgba(253,203,110,0.15); color:var(--yellow); }
-    .status-deprecated { background:rgba(225,112,85,0.15); color:var(--red); }
     .auth-tag { font-size:0.78rem; color:var(--text-muted); }
-    .auth-tag .lock { margin-right:0.3rem; }
     .rpc-desc { font-size:0.82rem; color:var(--text-muted); margin-top:0.2rem; }
     .hidden { display:none !important; }
     .legend { display:flex; gap:1.5rem; padding:0.8rem 2rem; background:var(--surface); border-bottom:1px solid var(--border); flex-wrap:wrap; align-items:center; font-size:0.82rem; }
@@ -96,22 +95,45 @@
       .rpc-table { font-size:0.82rem; }
       .rpc-table td, .rpc-table th { padding:0.5rem; }
       .stats { grid-template-columns:repeat(2,1fr); }
+      .detail-grid { grid-template-columns:1fr !important; }
     }
-    .detail-row { background:var(--bg) !important; }
-    .detail-content { padding:1rem 1.5rem; font-size:0.85rem; }
-    .detail-content h4 { color:var(--accent-light); margin-bottom:0.5rem; font-size:0.9rem; }
-    .detail-content .field-table { width:100%; border-collapse:collapse; margin:0.5rem 0 1rem; }
-    .detail-content .field-table th { text-align:left; font-size:0.75rem; color:var(--text-muted); padding:0.4rem 0.8rem; border-bottom:1px solid var(--border); }
-    .detail-content .field-table td { padding:0.4rem 0.8rem; font-size:0.82rem; border-bottom:1px solid rgba(46,49,69,0.5); font-family:'SF Mono',monospace; }
-    .detail-content .field-table td:first-child { color:var(--accent-light); }
-    .detail-content .field-table td:nth-child(2) { color:var(--green); }
     .disclaimer { background:rgba(225,112,85,0.1); border:1px solid rgba(225,112,85,0.3); border-radius:6px; padding:0.8rem 1rem; margin:1rem 2rem; font-size:0.82rem; color:var(--red); }
+    .expand-icon { display:inline-block; width:16px; font-size:0.7rem; color:var(--accent-light); transition:transform 0.2s; margin-right:4px; }
+    .expand-icon.open { transform:rotate(90deg); }
+    .detail-panel { background:var(--bg); border-bottom:2px solid var(--accent); }
+    .detail-panel td { padding:0 !important; }
+    .detail-inner { padding:1.2rem 1.5rem 1.5rem; }
+    .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .msg-block { background:var(--surface); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:0.8rem; }
+    .msg-header { padding:0.5rem 1rem; background:var(--surface2); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.6rem; }
+    .msg-title { font-family:'SF Mono',Consolas,monospace; font-size:0.85rem; font-weight:600; color:var(--accent-light); }
+    .msg-label { font-size:0.7rem; font-weight:700; padding:0.1rem 0.5rem; border-radius:3px; text-transform:uppercase; letter-spacing:0.05em; }
+    .msg-label.req { background:rgba(116,185,255,0.15); color:var(--blue); }
+    .msg-label.res { background:rgba(0,184,148,0.15); color:var(--green); }
+    .msg-label.enum-label { background:rgba(253,203,110,0.15); color:var(--yellow); }
+    .msg-label.nested-label { background:rgba(162,155,254,0.15); color:var(--accent-light); }
+    .field-table { width:100%; border-collapse:collapse; }
+    .field-table th { text-align:left; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); padding:0.4rem 0.8rem; border-bottom:1px solid var(--border); font-weight:600; }
+    .field-table td { padding:0.35rem 0.8rem; font-size:0.8rem; border-bottom:1px solid rgba(46,49,69,0.5); vertical-align:top; }
+    .field-table tr:last-child td { border-bottom:none; }
+    .field-name { font-family:'SF Mono',Consolas,monospace; color:var(--accent-light); font-size:0.8rem; }
+    .field-type { font-family:'SF Mono',Consolas,monospace; color:var(--green); font-size:0.78rem; }
+    .field-type.clickable { cursor:pointer; text-decoration:underline; text-decoration-style:dotted; text-underline-offset:2px; }
+    .field-type.clickable:hover { color:var(--cyan); }
+    .field-num { font-family:'SF Mono',Consolas,monospace; color:var(--text-muted); font-size:0.72rem; }
+    .field-desc { color:var(--text-muted); font-size:0.78rem; }
+    .enum-values { display:flex; flex-wrap:wrap; gap:0.3rem; padding:0.5rem 0.8rem; }
+    .enum-val { font-family:'SF Mono',Consolas,monospace; font-size:0.75rem; padding:0.15rem 0.5rem; background:var(--surface2); border:1px solid var(--border); border-radius:3px; color:var(--yellow); }
+    .nested-content { margin-left:0.5rem; border-left:2px solid var(--accent); padding-left:0; margin-top:0.4rem; }
+    .proto-path { font-family:'SF Mono',Consolas,monospace; font-size:0.76rem; color:var(--text-muted); padding:0.4rem 0.8rem; background:var(--surface2); border-radius:4px; margin-bottom:1rem; display:inline-block; }
+    .empty-msg { padding:0.6rem 1rem; color:var(--text-muted); font-style:italic; font-size:0.82rem; }
+    .msg-field-count { margin-left:auto; font-size:0.72rem; color:var(--text-muted); }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>🔐 Smart<span>Super</span> API Console</h1>
-    <div class="subtitle">gRPC + REST API Reference — Role-Based Views</div>
+    <div class="subtitle">gRPC + REST API Reference — Click any endpoint to explore Request/Response schemas</div>
     <div class="meta">
       <span>📌 Version: v1.0.0</span>
       <span>📅 Updated: 2026-02-15</span>
@@ -120,7 +142,6 @@
       <span>📡 Transport: gRPC (HTTP/2) + REST (TLS 1.3)</span>
     </div>
   </div>
-
   <div class="controls">
     <input type="text" class="search" id="searchInput" placeholder="🔍 Search APIs — e.g. 'fund', 'tax', 'login', 'rollover'...">
     <div class="role-tabs">
@@ -140,7 +161,6 @@
       <button class="expand-btn" onclick="collapseAll()">▶ Collapse All</button>
     </div>
   </div>
-
   <div class="legend">
     <span class="legend-title">Visibility:</span>
     <span class="legend-item"><span class="visibility-tag vis-external">External</span> Vendor-safe</span>
@@ -152,309 +172,504 @@
     <span class="legend-item"><span class="method-badge method-put">PUT</span></span>
     <span class="legend-item"><span class="method-badge method-patch">PATCH</span></span>
     <span class="legend-item"><span class="method-badge method-delete">DELETE</span></span>
-    <span class="legend-item"><span class="method-badge method-stream">SSE</span></span>
+    <span class="legend-item"><span class="method-badge method-sse">SSE</span></span>
+    <span style="margin-left:auto;font-size:0.78rem;color:var(--text-muted);font-style:italic">💡 Click any endpoint row to see Request / Response proto schemas</span>
   </div>
-
   <div id="disclaimer" class="disclaimer hidden">
     ⚠️ <strong>External / Vendor View:</strong> You are viewing only the APIs available for third-party integration. Internal service-to-service and mobile-specific APIs are hidden. Contact <strong>api@smartsuper.com.au</strong> for API key access.
   </div>
-
   <div class="content">
     <div class="stats" id="stats"></div>
     <div id="services"></div>
     <div id="noResults" class="no-results hidden">No APIs match your search criteria.</div>
   </div>
-
   <div class="footer">
-    <p>SmartSuper API Console v1.0.0 — Auto-generated from Protocol Buffer definitions</p>
+    <p>SmartSuper API Console v2.0.0 — Interactive proto schema explorer — Auto-generated from Protocol Buffer definitions</p>
     <p>Proto source: <code>smart-super-api/proto/smartsuper/</code> — Last sync: 2026-02-15</p>
     <p>© 2026 SmartSuper Pty Ltd — ABN 12 345 678 901 — AFSL 123456</p>
   </div>
-
 <script>
-const API_DATA = [
-  {
-    service: "UserService",
-    icon: "👤",
-    proto: "proto/smartsuper/user/v1/user_service.proto",
-    description: "User registration, authentication, profile, KYC, and consent management",
-    rpcs: [
-      { name:"Register", method:"POST", rest:"/v1/auth/register", desc:"Register new user account", visibility:"external", status:"live", auth:"none", scopes:[] },
-      { name:"Login", method:"POST", rest:"/v1/auth/login", desc:"Authenticate user and return tokens", visibility:"external", status:"live", auth:"none", scopes:[] },
-      { name:"RefreshToken", method:"POST", rest:"/v1/auth/refresh", desc:"Exchange refresh token for new access token", visibility:"external", status:"live", auth:"bearer", scopes:["auth:refresh"] },
-      { name:"Logout", method:"POST", rest:"/v1/auth/logout", desc:"Invalidate user session(s)", visibility:"ui", status:"live", auth:"bearer", scopes:["user:read"] },
-      { name:"EnableMFA", method:"POST", rest:"/v1/auth/mfa/setup", desc:"Set up multi-factor authentication (TOTP/SMS/Biometric)", visibility:"ui", status:"live", auth:"bearer", scopes:["user:write"] },
-      { name:"VerifyMFA", method:"POST", rest:"/v1/auth/mfa/verify", desc:"Validate MFA code and complete authentication", visibility:"external", status:"live", auth:"bearer", scopes:["auth:mfa"] },
-      { name:"GetProfile", method:"GET", rest:"/v1/users/me", desc:"Retrieve authenticated user's profile", visibility:"ui", status:"live", auth:"bearer", scopes:["user:read"] },
-      { name:"UpdateProfile", method:"PATCH", rest:"/v1/users/me", desc:"Modify user profile fields (uses FieldMask)", visibility:"ui", status:"live", auth:"bearer", scopes:["user:write"] },
-      { name:"DeleteAccount", method:"DELETE", rest:"/v1/users/me", desc:"Permanently delete user account and data", visibility:"ui", status:"live", auth:"bearer", scopes:["user:delete"] },
-      { name:"SubmitKYC", method:"POST", rest:"/v1/users/me/kyc", desc:"Submit identity verification documents (licence, passport, medicare)", visibility:"ui", status:"live", auth:"bearer", scopes:["user:write"] },
-      { name:"GetKYCStatus", method:"GET", rest:"/v1/users/me/kyc/status", desc:"Retrieve current KYC verification status", visibility:"ui", status:"live", auth:"bearer", scopes:["user:read"] },
-      { name:"ListConsents", method:"GET", rest:"/v1/users/me/consents", desc:"List all consent records for the user", visibility:"ui", status:"live", auth:"bearer", scopes:["user:read"] },
-      { name:"GrantConsent", method:"POST", rest:"/v1/users/me/consents", desc:"Record user consent for data processing", visibility:"external", status:"live", auth:"bearer", scopes:["user:write"] },
-      { name:"RevokeConsent", method:"DELETE", rest:"/v1/users/me/consents/{consent_id}", desc:"Withdraw a previously granted consent", visibility:"external", status:"live", auth:"bearer", scopes:["user:write"] },
-    ]
-  },
-  {
-    service: "SuperFundService",
-    icon: "💰",
-    proto: "proto/smartsuper/super/v1/super_fund_service.proto",
-    description: "Super fund account linking, balances, contributions, fees, insurance, performance, and fund comparison",
-    rpcs: [
-      { name:"LinkAccount", method:"POST", rest:"/v1/super/accounts", desc:"Link a new super fund account via USI + member number", visibility:"ui", status:"live", auth:"bearer", scopes:["super:write"] },
-      { name:"ListAccounts", method:"GET", rest:"/v1/super/accounts", desc:"List all linked super fund accounts with total balance", visibility:"ui", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"GetAccount", method:"GET", rest:"/v1/super/accounts/{account_id}", desc:"Get details of a specific super fund account", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"UnlinkAccount", method:"DELETE", rest:"/v1/super/accounts/{account_id}", desc:"Remove the link to a super fund account", visibility:"ui", status:"live", auth:"bearer", scopes:["super:write"] },
-      { name:"SyncAccount", method:"POST", rest:"/v1/super/accounts/{account_id}/sync", desc:"Trigger data sync with the super fund", visibility:"internal", status:"live", auth:"service", scopes:["super:sync"] },
-      { name:"GetBalance", method:"GET", rest:"/v1/super/accounts/{account_id}/balance", desc:"Get current balance with investment allocation breakdown", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"GetBalanceHistory", method:"GET", rest:"/v1/super/accounts/{account_id}/balance/history", desc:"Historical balance snapshots (daily/weekly/monthly/quarterly/yearly)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"ListContributions", method:"GET", rest:"/v1/super/accounts/{account_id}/contributions", desc:"List contribution records (employer SG, salary sacrifice, personal, etc.)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"GetContributionSummary", method:"GET", rest:"/v1/super/accounts/{account_id}/contributions/summary", desc:"Contribution summary by type for a financial year with cap tracking", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"GetFeeBreakdown", method:"GET", rest:"/v1/super/accounts/{account_id}/fees", desc:"Itemised fee schedule (admin, investment, buy/sell spread)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"GetInsuranceDetails", method:"GET", rest:"/v1/super/accounts/{account_id}/insurance", desc:"Insurance cover details (life, TPD, income protection)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"GetPerformance", method:"GET", rest:"/v1/super/accounts/{account_id}/performance", desc:"Investment performance metrics with benchmark comparison", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"SearchFunds", method:"GET", rest:"/v1/super/funds", desc:"Search APRA fund registry (filter by type, risk, fees)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"GetFundDetails", method:"GET", rest:"/v1/super/funds/{fund_id}", desc:"Full fund details (options, fees, insurance, performance, PDS)", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"CompareFunds", method:"POST", rest:"/v1/super/funds/compare", desc:"Side-by-side comparison of 2-4 funds with AI recommendation", visibility:"external", status:"live", auth:"bearer", scopes:["super:read"] },
-      { name:"InitiateRollover", method:"POST", rest:"/v1/super/rollovers", desc:"Start fund rollover process (full or partial)", visibility:"ui", status:"beta", auth:"bearer", scopes:["super:write"] },
-      { name:"GetRolloverStatus", method:"GET", rest:"/v1/super/rollovers/{rollover_id}", desc:"Track rollover progress and status", visibility:"ui", status:"beta", auth:"bearer", scopes:["super:read"] },
-    ]
-  },
-  {
-    service: "TaxService",
-    icon: "🧾",
-    proto: "proto/smartsuper/tax/v1/tax_service.proto",
-    description: "Tax estimation, Division 293, contribution caps, deduction tracking, and tax reporting",
-    rpcs: [
-      { name:"CalculateTaxEstimate", method:"POST", rest:"/v1/tax/estimate", desc:"Calculate comprehensive tax estimate including contributions tax, Division 293, and savings", visibility:"external", status:"live", auth:"bearer", scopes:["tax:read"] },
-      { name:"GetTaxEstimate", method:"GET", rest:"/v1/tax/estimate/{estimate_id}", desc:"Retrieve a previously calculated tax estimate", visibility:"external", status:"live", auth:"bearer", scopes:["tax:read"] },
-      { name:"GetContributionCaps", method:"GET", rest:"/v1/tax/contributions/caps", desc:"Contribution cap details with carry-forward and bring-forward tracking", visibility:"external", status:"live", auth:"bearer", scopes:["tax:read"] },
-      { name:"AssessDivision293", method:"POST", rest:"/v1/tax/division293", desc:"Calculate Division 293 tax liability (income > $250k threshold)", visibility:"external", status:"live", auth:"bearer", scopes:["tax:read"] },
-      { name:"GetDivision293History", method:"GET", rest:"/v1/tax/division293/history", desc:"Historical Division 293 assessment records", visibility:"ui", status:"live", auth:"bearer", scopes:["tax:read"] },
-      { name:"CreateDeductionNotice", method:"POST", rest:"/v1/tax/deductions", desc:"Lodge personal contribution deduction notice (s290-170)", visibility:"ui", status:"live", auth:"bearer", scopes:["tax:write"] },
-      { name:"ListDeductions", method:"GET", rest:"/v1/tax/deductions", desc:"List deduction notices for a financial year", visibility:"ui", status:"live", auth:"bearer", scopes:["tax:read"] },
-      { name:"AcknowledgeDeduction", method:"POST", rest:"/v1/tax/deductions/{deduction_id}/acknowledge", desc:"Record fund acknowledgement of deduction notice", visibility:"internal", status:"live", auth:"service", scopes:["tax:write"] },
-      { name:"GetAnnualTaxReport", method:"GET", rest:"/v1/tax/report/{financial_year}", desc:"Generate annual tax report with ATO pre-fill data", visibility:"external", status:"live", auth:"bearer", scopes:["tax:read"] },
-      { name:"GetTaxOptimisations", method:"GET", rest:"/v1/tax/optimisations", desc:"AI-generated tax optimisation strategies with savings estimates", visibility:"ui", status:"beta", auth:"bearer", scopes:["tax:read","ai:read"] },
-    ]
-  },
-  {
-    service: "AIInsightsService",
-    icon: "🤖",
-    proto: "proto/smartsuper/ai/v1/ai_insights_service.proto",
-    description: "AI-powered recommendations, chat assistant, retirement projections, anomaly detection, and statement parsing",
-    rpcs: [
-      { name:"GetRecommendations", method:"GET", rest:"/v1/ai/recommendations", desc:"Get personalised AI recommendations (contribution, investment, insurance)", visibility:"external", status:"live", auth:"bearer", scopes:["ai:read"] },
-      { name:"SubmitRecommendationFeedback", method:"POST", rest:"/v1/ai/recommendations/{id}/feedback", desc:"Submit feedback on a recommendation (helpful/not_helpful/acted_on)", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:write"] },
-      { name:"CreateChatSession", method:"POST", rest:"/v1/ai/chat/sessions", desc:"Create AI chat session for super questions", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:read"] },
-      { name:"SendMessage", method:"POST", rest:"/v1/ai/chat/sessions/{session_id}/messages", desc:"Send message to AI chat assistant", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:read"] },
-      { name:"StreamMessage", method:"SSE", rest:"/v1/ai/chat/sessions/{session_id}/stream", desc:"Stream AI chat response (server-sent events / gRPC server streaming)", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:read"] },
-      { name:"GetChatHistory", method:"GET", rest:"/v1/ai/chat/sessions/{session_id}/messages", desc:"Retrieve chat message history for a session", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:read"] },
-      { name:"PredictRetirement", method:"POST", rest:"/v1/ai/predictions/retirement", desc:"Monte Carlo retirement projection (pessimistic/base/optimistic scenarios)", visibility:"external", status:"live", auth:"bearer", scopes:["ai:read"] },
-      { name:"PredictFundPerformance", method:"POST", rest:"/v1/ai/predictions/fund-performance", desc:"ML-based fund performance prediction with confidence intervals", visibility:"external", status:"beta", auth:"bearer", scopes:["ai:read"] },
-      { name:"GetAnomalies", method:"GET", rest:"/v1/ai/anomalies", desc:"Detect anomalies (missing contributions, unusual fees, etc.)", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:read"] },
-      { name:"DismissAnomaly", method:"POST", rest:"/v1/ai/anomalies/{anomaly_id}/dismiss", desc:"Dismiss a detected anomaly with reason", visibility:"ui", status:"live", auth:"bearer", scopes:["ai:write"] },
-      { name:"ParseStatement", method:"POST", rest:"/v1/ai/statements/parse", desc:"Upload and parse super statement PDF using Document AI + Gemini", visibility:"external", status:"live", auth:"bearer", scopes:["statement:upload"] },
-      { name:"GetParseStatus", method:"GET", rest:"/v1/ai/statements/parse/{job_id}/status", desc:"Check statement parsing progress", visibility:"ui", status:"live", auth:"bearer", scopes:["statement:upload"] },
-      { name:"GetParsedResult", method:"GET", rest:"/v1/ai/statements/parse/{job_id}/result", desc:"Get parsed statement data (fund, balance, contributions, fees, insurance)", visibility:"external", status:"live", auth:"bearer", scopes:["statement:upload"] },
-    ]
-  },
-  {
-    service: "DocumentService",
-    icon: "📄",
-    proto: "proto/smartsuper/document/v1/document_service.proto",
-    description: "Document upload, statement parsing pipeline (Document AI + Gemini), and document management",
-    rpcs: [
-      { name:"UploadStatement", method:"POST", rest:"/v1/statements/upload", desc:"Upload super statement PDF (max 10MB) with idempotency key", visibility:"external", status:"live", auth:"bearer", scopes:["statement:upload"] },
-      { name:"GetParseStatus", method:"GET", rest:"/v1/statements/{job_id}/status", desc:"Get parsing pipeline status (queued → extracting → structuring → validating → completed)", visibility:"external", status:"live", auth:"bearer", scopes:["statement:upload"] },
-      { name:"GetParsedStatement", method:"GET", rest:"/v1/statements/{document_id}", desc:"Get parsed statement with confidence scores per field", visibility:"external", status:"live", auth:"bearer", scopes:["statement:upload"] },
-      { name:"ListDocuments", method:"GET", rest:"/v1/statements", desc:"List uploaded documents with optional financial year filter", visibility:"ui", status:"live", auth:"bearer", scopes:["statement:upload"] },
-      { name:"GetDocument", method:"GET", rest:"/v1/statements/{document_id}/meta", desc:"Get document metadata (size, state, fund, financial year)", visibility:"ui", status:"live", auth:"bearer", scopes:["statement:upload"] },
-      { name:"DeleteDocument", method:"DELETE", rest:"/v1/statements/{document_id}", desc:"Delete an uploaded document", visibility:"ui", status:"live", auth:"bearer", scopes:["statement:upload"] },
-      { name:"RetryParsing", method:"POST", rest:"/v1/statements/{document_id}/retry", desc:"Retry parsing for a failed document", visibility:"internal", status:"live", auth:"service", scopes:["statement:admin"] },
-    ]
-  },
-  {
-    service: "NotificationService",
-    icon: "🔔",
-    proto: "proto/smartsuper/notification/v1/notification_service.proto",
-    description: "Multi-channel notifications (push/email/SMS), device registration, and preferences",
-    rpcs: [
-      { name:"ListNotifications", method:"GET", rest:"/v1/notifications", desc:"List notifications with status/category filter and cursor pagination", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:read"] },
-      { name:"MarkAsRead", method:"POST", rest:"/v1/notifications/{notification_id}/read", desc:"Mark a single notification as read", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:write"] },
-      { name:"MarkAllAsRead", method:"POST", rest:"/v1/notifications/read-all", desc:"Mark all notifications as read", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:write"] },
-      { name:"GetUnreadCount", method:"GET", rest:"/v1/notifications/unread-count", desc:"Get unread notification count by category", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:read"] },
-      { name:"GetPreferences", method:"GET", rest:"/v1/notifications/preferences", desc:"Get notification preferences (push/email/SMS per category)", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:read"] },
-      { name:"UpdatePreferences", method:"PUT", rest:"/v1/notifications/preferences", desc:"Update notification preferences including quiet hours", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:write"] },
-      { name:"RegisterDevice", method:"POST", rest:"/v1/notifications/devices", desc:"Register iOS device for push notifications (APNs token)", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:write"] },
-      { name:"ListDevices", method:"GET", rest:"/v1/notifications/devices", desc:"List registered devices", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:read"] },
-      { name:"UnregisterDevice", method:"DELETE", rest:"/v1/notifications/devices/{device_id}", desc:"Unregister a device from push notifications", visibility:"ui", status:"live", auth:"bearer", scopes:["notification:write"] },
-      { name:"SendNotification", method:"POST", rest:"/v1/internal/notifications/send", desc:"Service-to-service: Send notification to a specific user", visibility:"internal", status:"live", auth:"service", scopes:["notification:admin"] },
-      { name:"SendBulkNotification", method:"POST", rest:"/v1/internal/notifications/send-bulk", desc:"Service-to-service: Send bulk notifications to multiple users", visibility:"internal", status:"live", auth:"service", scopes:["notification:admin"] },
-    ]
-  },
-  {
-    service: "ComplianceService",
-    icon: "🛡️",
-    proto: "proto/smartsuper/compliance/v1/compliance_service.proto",
-    description: "Regulatory compliance, audit logging, AML/CTF monitoring, privacy requests (APRA, ATO, ASIC, OAIC, AUSTRAC)",
-    rpcs: [
-      { name:"GetAuditLog", method:"GET", rest:"/v1/admin/audit/{entry_id}", desc:"Get a specific audit log entry", visibility:"internal", status:"live", auth:"service", scopes:["admin:audit"] },
-      { name:"SearchAuditLogs", method:"GET", rest:"/v1/admin/audit", desc:"Search audit logs by user, resource, event type, and date range", visibility:"internal", status:"live", auth:"service", scopes:["admin:audit"] },
-      { name:"ListUserConsents", method:"GET", rest:"/v1/admin/compliance/consents/{user_id}", desc:"List all consent records for a specific user (admin view)", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
-      { name:"GetConsentAuditTrail", method:"GET", rest:"/v1/admin/compliance/consents/{user_id}/audit", desc:"Full consent history/versions for a user and consent type", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
-      { name:"SubmitPrivacyRequest", method:"POST", rest:"/v1/privacy/requests", desc:"Submit privacy request (access/correction/deletion/export/restriction)", visibility:"external", status:"live", auth:"bearer", scopes:["user:read"] },
-      { name:"GetPrivacyRequestStatus", method:"GET", rest:"/v1/privacy/requests/{request_id}", desc:"Track privacy request status (30-day deadline per Privacy Act)", visibility:"external", status:"live", auth:"bearer", scopes:["user:read"] },
-      { name:"ListPrivacyRequests", method:"GET", rest:"/v1/privacy/requests", desc:"List all privacy requests", visibility:"ui", status:"live", auth:"bearer", scopes:["user:read"] },
-      { name:"GetAMLStatus", method:"GET", rest:"/v1/admin/compliance/aml/{user_id}", desc:"AML/CTF risk assessment status (AUSTRAC compliance)", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
-      { name:"ReportSuspiciousActivity", method:"POST", rest:"/v1/admin/compliance/aml/suspicious", desc:"Report suspicious activity to AUSTRAC", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
-      { name:"GenerateRegulatoryReport", method:"POST", rest:"/v1/admin/compliance/reports", desc:"Generate regulatory report (APRA CPS234, OAIC NDB, AUSTRAC AML, etc.)", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
-      { name:"ListRegulatoryReports", method:"GET", rest:"/v1/admin/compliance/reports", desc:"List generated regulatory reports", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
-      { name:"GetRetentionPolicy", method:"GET", rest:"/v1/admin/compliance/retention", desc:"Get data retention policies per category with regulatory basis", visibility:"internal", status:"live", auth:"service", scopes:["admin:compliance"] },
-    ]
-  },
-  {
-    service: "Health",
-    icon: "💚",
-    proto: "proto/smartsuper/common/v1/common.proto",
-    description: "gRPC Health Checking Protocol — service health and readiness",
-    rpcs: [
-      { name:"Check", method:"GET", rest:"/v1/health", desc:"Health check (SERVING / NOT_SERVING / UNKNOWN)", visibility:"external", status:"live", auth:"none", scopes:[] },
-      { name:"Watch", method:"SSE", rest:"/v1/health/watch", desc:"Stream health status changes (gRPC server streaming)", visibility:"internal", status:"live", auth:"service", scopes:[] },
-    ]
-  }
+// ══════════════════════════════════════════════════
+// PROTO MESSAGE DEFINITIONS
+// ══════════════════════════════════════════════════
+const M={
+"Money":{f:[{n:"units",t:"int64",d:"Whole AUD dollars"},{n:"nanos",t:"int32",d:"Fractional cents (0-999999999)"},{n:"currency",t:"string",d:'ISO 4217 code, always "AUD"'}]},
+"Percentage":{f:[{n:"value",t:"double",d:"Decimal value (0.15 = 15%)"},{n:"display",t:"string",d:'Human-readable e.g. "15%"'}]},
+"PaginationRequest":{f:[{n:"page_size",t:"int32",d:"Max results per page"},{n:"page_token",t:"string",d:"Token from previous response"}]},
+"PaginationResponse":{f:[{n:"next_page_token",t:"string",d:"Next page token"},{n:"total_count",t:"int32",d:"Total results"},{n:"has_more",t:"bool",d:"More results exist"}]},
+"AuditMetadata":{f:[{n:"event_id",t:"string",d:"Unique event ID"},{n:"event_type",t:"string",d:"Event type"},{n:"source_service",t:"string",d:"Originating service"},{n:"user_id",t:"string",d:"Acting user"},{n:"correlation_id",t:"string",d:"Request correlation ID"},{n:"ip_address",t:"string",d:"Client IP"},{n:"user_agent",t:"string",d:"Client user agent"},{n:"timestamp",t:"Timestamp",d:"When event occurred"},{n:"labels",t:"map<string,string>",d:"Key-value labels"}]},
+"HealthCheckRequest":{f:[{n:"service",t:"string",d:"Service name (empty=all)"}]},
+"HealthCheckResponse":{f:[{n:"status",t:"ServingStatus",d:"Service health status"}]},
+"RegisterRequest":{f:[{n:"email",t:"string",d:"Email address"},{n:"password",t:"string",d:"Password (min 8 chars)"},{n:"given_name",t:"string",d:"First name"},{n:"family_name",t:"string",d:"Last name"},{n:"phone_number",t:"string",d:"Australian mobile (+61...)"},{n:"date_of_birth",t:"string",d:"DOB (YYYY-MM-DD)"},{n:"auth_provider",t:"AuthProvider",d:"Auth provider"}]},
+"RegisterResponse":{f:[{n:"auth",t:"AuthTokens",d:"Authentication tokens"}]},
+"LoginRequest":{f:[{n:"email",t:"string",d:"Email address"},{n:"password",t:"string",d:"Password"},{n:"device_id",t:"string",d:"Device identifier"},{n:"device_info",t:"string",d:"Device info (JSON)"},{n:"biometric",t:"BiometricCredential",d:"Optional biometric credential"}]},
+"LoginResponse":{f:[{n:"auth",t:"AuthTokens",d:"Authentication tokens"}]},
+"AuthTokens":{f:[{n:"access_token",t:"string",d:"JWT access token"},{n:"refresh_token",t:"string",d:"Refresh token"},{n:"expires_in",t:"int64",d:"TTL in seconds"},{n:"token_type",t:"string",d:'Always "Bearer"'},{n:"user",t:"UserProfile",d:"User profile"},{n:"mfa_required",t:"bool",d:"MFA verification needed"},{n:"mfa_session_token",t:"string",d:"MFA session token"}]},
+"BiometricCredential":{f:[{n:"assertion",t:"bytes",d:"Biometric assertion"},{n:"key_id",t:"string",d:"Key identifier"}]},
+"RefreshTokenRequest":{f:[{n:"refresh_token",t:"string",d:"Current refresh token"}]},
+"RefreshTokenResponse":{f:[{n:"auth",t:"AuthTokens",d:"New tokens"}]},
+"LogoutRequest":{f:[{n:"device_id",t:"string",d:"Device to log out"},{n:"all_devices",t:"bool",d:"Log out all devices"}]},
+"LogoutResponse":{f:[]},
+"EnableMFARequest":{f:[{n:"method",t:"MFAMethod",d:"MFA method"},{n:"phone_number",t:"string",d:"Phone for SMS MFA"}]},
+"EnableMFAResponse":{f:[{n:"secret",t:"string",d:"TOTP secret (base32)"},{n:"qr_code_uri",t:"string",d:"OTP auth URI"},{n:"backup_codes",t:"repeated string",d:"Recovery codes"}]},
+"VerifyMFARequest":{f:[{n:"mfa_session_token",t:"string",d:"MFA session token"},{n:"code",t:"string",d:"Verification code"},{n:"method",t:"MFAMethod",d:"MFA method used"}]},
+"VerifyMFAResponse":{f:[{n:"auth",t:"AuthTokens",d:"Authentication tokens"}]},
+"GetProfileRequest":{f:[]},
+"GetProfileResponse":{f:[{n:"profile",t:"UserProfile",d:"User profile"}]},
+"UpdateProfileRequest":{f:[{n:"profile",t:"UserProfile",d:"Updated fields"},{n:"update_mask",t:"FieldMask",d:"Fields to update"}]},
+"UpdateProfileResponse":{f:[{n:"profile",t:"UserProfile",d:"Updated profile"}]},
+"UserProfile":{f:[{n:"user_id",t:"string",d:"Unique user ID"},{n:"email",t:"string",d:"Email"},{n:"given_name",t:"string",d:"First name"},{n:"family_name",t:"string",d:"Last name"},{n:"phone_number",t:"string",d:"Phone"},{n:"date_of_birth",t:"string",d:"DOB (YYYY-MM-DD)"},{n:"address",t:"AustralianAddress",d:"Address"},{n:"avatar_url",t:"string",d:"Avatar URL"},{n:"status",t:"UserStatus",d:"Account status"},{n:"kyc_level",t:"KYCLevel",d:"KYC level"},{n:"created_at",t:"Timestamp",d:"Created"},{n:"updated_at",t:"Timestamp",d:"Last updated"}]},
+"AustralianAddress":{f:[{n:"unit_number",t:"string",d:"Unit number"},{n:"street_number",t:"string",d:"Street number"},{n:"street_name",t:"string",d:"Street name"},{n:"street_type",t:"string",d:"St, Rd, Ave, etc."},{n:"suburb",t:"string",d:"Suburb"},{n:"state",t:"string",d:"NSW/VIC/QLD/SA/WA/TAS/NT/ACT"},{n:"postcode",t:"string",d:"4-digit postcode"},{n:"country",t:"string",d:"Country (default: AU)"}]},
+"DeleteAccountRequest":{f:[{n:"confirmation",t:"string",d:'Must be "DELETE"'},{n:"reason",t:"string",d:"Deletion reason"}]},
+"DeleteAccountResponse":{f:[{n:"data_deletion_date",t:"Timestamp",d:"When data permanently deleted"}]},
+"SubmitKYCRequest":{f:[{n:"document_type",t:"DocumentType",d:"ID document type"},{n:"document_front",t:"bytes",d:"Front image"},{n:"document_back",t:"bytes",d:"Back image"},{n:"document_number",t:"string",d:"Document number"},{n:"document_expiry",t:"string",d:"Expiry (YYYY-MM-DD)"},{n:"selfie",t:"bytes",d:"Liveness selfie"},{n:"residential_address",t:"AustralianAddress",d:"Address"}]},
+"SubmitKYCResponse":{f:[{n:"submission",t:"KYCSubmission",d:"KYC result"}]},
+"GetKYCStatusRequest":{f:[]},
+"GetKYCStatusResponse":{f:[{n:"submission",t:"KYCSubmission",d:"KYC submission"}]},
+"KYCSubmission":{f:[{n:"submission_id",t:"string",d:"Submission ID"},{n:"status",t:"KYCVerificationStatus",d:"Verification status"},{n:"level_achieved",t:"KYCLevel",d:"Level achieved"},{n:"rejection_reason",t:"string",d:"Rejection reason"},{n:"submitted_at",t:"Timestamp",d:"Submitted"},{n:"verified_at",t:"Timestamp",d:"Verified"}]},
+"ListConsentsRequest":{f:[]},
+"ListConsentsResponse":{f:[{n:"consents",t:"repeated Consent",d:"Consent records"}]},
+"GrantConsentRequest":{f:[{n:"consent_type",t:"ConsentType",d:"Consent type"},{n:"purpose",t:"string",d:"Processing purpose"},{n:"duration_days",t:"int32",d:"Duration (0=indefinite)"},{n:"data_categories",t:"repeated string",d:"Data categories"}]},
+"GrantConsentResponse":{f:[{n:"consent",t:"Consent",d:"Granted consent"}]},
+"RevokeConsentRequest":{f:[{n:"consent_id",t:"string",d:"Consent ID"},{n:"reason",t:"string",d:"Revocation reason"}]},
+"RevokeConsentResponse":{f:[{n:"consent",t:"Consent",d:"Revoked consent"}]},
+"Consent":{f:[{n:"consent_id",t:"string",d:"Consent ID"},{n:"consent_type",t:"ConsentType",d:"Type"},{n:"purpose",t:"string",d:"Purpose"},{n:"status",t:"ConsentStatus",d:"Status"},{n:"data_categories",t:"repeated string",d:"Categories"},{n:"granted_at",t:"Timestamp",d:"Granted"},{n:"expires_at",t:"Timestamp",d:"Expires"},{n:"revoked_at",t:"Timestamp",d:"Revoked"}]},
+"LinkAccountRequest":{f:[{n:"fund_usi",t:"string",d:"Unique Superannuation Identifier"},{n:"member_number",t:"string",d:"Member number"},{n:"date_of_birth",t:"string",d:"DOB (YYYY-MM-DD)"},{n:"tfn",t:"TFNVerification",d:"TFN verification (oneof)"},{n:"fund_login",t:"FundLoginVerification",d:"Fund login (oneof)"}]},
+"TFNVerification":{f:[{n:"encrypted_tfn",t:"string",d:"Field-level encrypted TFN"}]},
+"FundLoginVerification":{f:[{n:"username",t:"string",d:"Fund portal username"},{n:"encrypted_password",t:"string",d:"Encrypted password"}]},
+"SuperAccount":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"user_id",t:"string",d:"Owner user ID"},{n:"fund_name",t:"string",d:"Fund name"},{n:"fund_abn",t:"string",d:"ABN"},{n:"fund_usi",t:"string",d:"USI"},{n:"product_name",t:"string",d:"Product name"},{n:"member_number",t:"string",d:"Member number"},{n:"account_type",t:"AccountType",d:"Account type"},{n:"status",t:"AccountStatus",d:"Account status"},{n:"current_balance",t:"Money",d:"Current balance"},{n:"investment_option",t:"string",d:"Investment option"},{n:"linked_at",t:"Timestamp",d:"Linked date"},{n:"last_synced_at",t:"Timestamp",d:"Last synced"}]},
+"ListAccountsRequest":{f:[]},
+"ListAccountsResponse":{f:[{n:"accounts",t:"repeated SuperAccount",d:"Linked accounts"},{n:"total_balance",t:"Money",d:"Combined balance"}]},
+"GetAccountRequest":{f:[{n:"account_id",t:"string",d:"Account ID"}]},
+"UnlinkAccountRequest":{f:[{n:"account_id",t:"string",d:"Account to unlink"},{n:"reason",t:"string",d:"Reason"}]},
+"UnlinkAccountResponse":{f:[]},
+"SyncAccountRequest":{f:[{n:"account_id",t:"string",d:"Account to sync"},{n:"force",t:"bool",d:"Force sync"}]},
+"SyncAccountResponse":{f:[{n:"account_id",t:"string",d:"Synced account"},{n:"status",t:"SyncStatus",d:"Sync outcome"},{n:"synced_at",t:"Timestamp",d:"When synced"},{n:"balance_change",t:"BalanceChange",d:"Balance change"}]},
+"BalanceChange":{f:[{n:"previous_balance",t:"Money",d:"Before sync"},{n:"current_balance",t:"Money",d:"After sync"},{n:"difference",t:"Money",d:"Net difference"}]},
+"GetBalanceRequest":{f:[{n:"account_id",t:"string",d:"Account ID"}]},
+"BalanceResponse":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"balance",t:"Money",d:"Total balance"},{n:"as_of",t:"Timestamp",d:"Balance date"},{n:"allocations",t:"repeated InvestmentAllocation",d:"Allocation breakdown"}]},
+"InvestmentAllocation":{f:[{n:"option_name",t:"string",d:"Option name"},{n:"percentage",t:"double",d:"% of total"},{n:"balance",t:"Money",d:"Dollar balance"},{n:"return_ytd",t:"double",d:"YTD return %"}]},
+"GetBalanceHistoryRequest":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"from",t:"Timestamp",d:"Start date"},{n:"to",t:"Timestamp",d:"End date"},{n:"granularity",t:"Granularity",d:"Time granularity"}]},
+"BalanceHistoryResponse":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"snapshots",t:"repeated BalanceSnapshot",d:"Time-series data"}]},
+"BalanceSnapshot":{f:[{n:"date",t:"Timestamp",d:"Snapshot date"},{n:"balance",t:"Money",d:"Total balance"},{n:"contributions",t:"Money",d:"Period contributions"},{n:"earnings",t:"Money",d:"Earnings"},{n:"fees",t:"Money",d:"Fees"}]},
+"ListContributionsRequest":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"financial_year",t:"string",d:'e.g. "2025-26"'},{n:"type",t:"ContributionType",d:"Type filter"},{n:"page_size",t:"int32",d:"Max results"},{n:"page_token",t:"string",d:"Page token"}]},
+"ListContributionsResponse":{f:[{n:"contributions",t:"repeated Contribution",d:"Records"},{n:"next_page_token",t:"string",d:"Next page"},{n:"total_count",t:"int32",d:"Total count"}]},
+"Contribution":{f:[{n:"contribution_id",t:"string",d:"ID"},{n:"account_id",t:"string",d:"Account"},{n:"type",t:"ContributionType",d:"Type"},{n:"amount",t:"Money",d:"Amount"},{n:"date",t:"Timestamp",d:"Date"},{n:"employer_name",t:"string",d:"Employer"},{n:"reference",t:"string",d:"Reference"},{n:"financial_year",t:"string",d:"FY"}]},
+"GetContributionSummaryRequest":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"financial_year",t:"string",d:'e.g. "2025-26"'}]},
+"ContributionSummary":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"financial_year",t:"string",d:"FY"},{n:"total_concessional",t:"Money",d:"Total concessional"},{n:"total_non_concessional",t:"Money",d:"Total non-concessional"},{n:"employer_sg",t:"Money",d:"Employer SG"},{n:"salary_sacrifice",t:"Money",d:"Salary sacrifice"},{n:"personal_concessional",t:"Money",d:"Personal concessional"},{n:"personal_non_concessional",t:"Money",d:"Personal non-concessional"},{n:"concessional_cap",t:"Money",d:"Cap"},{n:"concessional_remaining",t:"Money",d:"Remaining"},{n:"non_concessional_cap",t:"Money",d:"Cap"},{n:"non_concessional_remaining",t:"Money",d:"Remaining"}]},
+"GetFeeBreakdownRequest":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"financial_year",t:"string",d:'e.g. "2025-26"'}]},
+"FeeBreakdown":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"financial_year",t:"string",d:"FY"},{n:"total_fees",t:"Money",d:"Total fees"},{n:"fees",t:"repeated FeeItem",d:"Itemised fees"},{n:"fee_percentage_of_balance",t:"double",d:"Fees as % of balance"}]},
+"FeeItem":{f:[{n:"fee_type",t:"string",d:"Category"},{n:"description",t:"string",d:"Description"},{n:"amount",t:"Money",d:"Amount"},{n:"frequency",t:"string",d:"Frequency"},{n:"percentage",t:"double",d:"Rate %"}]},
+"GetInsuranceDetailsRequest":{f:[{n:"account_id",t:"string",d:"Account ID"}]},
+"InsuranceDetails":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"life",t:"LifeInsurance",d:"Life cover"},{n:"tpd",t:"TPDInsurance",d:"TPD cover"},{n:"income_protection",t:"IncomeProtection",d:"IP cover"},{n:"total_annual_premium",t:"Money",d:"Total premiums"}]},
+"LifeInsurance":{f:[{n:"cover_amount",t:"Money",d:"Sum insured"},{n:"annual_premium",t:"Money",d:"Annual premium"},{n:"beneficiary",t:"string",d:"Beneficiary"},{n:"cover_type",t:"InsuranceCoverType",d:"Cover type"}]},
+"TPDInsurance":{f:[{n:"cover_amount",t:"Money",d:"Sum insured"},{n:"annual_premium",t:"Money",d:"Annual premium"},{n:"definition",t:"string",d:"any/own occupation"}]},
+"IncomeProtection":{f:[{n:"monthly_benefit",t:"Money",d:"Monthly benefit"},{n:"waiting_period_days",t:"int32",d:"Waiting period"},{n:"benefit_period_years",t:"int32",d:"Benefit period (0=age 65)"},{n:"annual_premium",t:"Money",d:"Annual premium"}]},
+"GetPerformanceRequest":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"period",t:"PerformancePeriod",d:"Look-back period"}]},
+"PerformanceResponse":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"metrics",t:"repeated PerformanceMetric",d:"Performance data"},{n:"asset_allocation",t:"repeated AssetAllocation",d:"Asset allocation"}]},
+"PerformanceMetric":{f:[{n:"period",t:"PerformancePeriod",d:"Period"},{n:"return_percentage",t:"double",d:"Return %"},{n:"return_amount",t:"Money",d:"Return $"},{n:"benchmark_return",t:"double",d:"Benchmark %"},{n:"excess_return",t:"double",d:"Excess %"}]},
+"AssetAllocation":{f:[{n:"asset_class",t:"string",d:"Asset class"},{n:"percentage",t:"double",d:"Allocation %"},{n:"value",t:"Money",d:"Dollar value"}]},
+"SearchFundsRequest":{f:[{n:"query",t:"string",d:"Search query"},{n:"fund_types",t:"repeated string",d:"Fund type filter"},{n:"risk_level",t:"string",d:"Risk filter"},{n:"max_total_fee",t:"double",d:"Max fee %"},{n:"page_size",t:"int32",d:"Max results"},{n:"page_token",t:"string",d:"Page token"},{n:"sort_by",t:"SortBy",d:"Sort order"}]},
+"SearchFundsResponse":{f:[{n:"funds",t:"repeated FundSummary",d:"Results"},{n:"next_page_token",t:"string",d:"Next page"},{n:"total_count",t:"int32",d:"Total count"}]},
+"FundSummary":{f:[{n:"fund_id",t:"string",d:"Fund ID"},{n:"fund_name",t:"string",d:"Name"},{n:"fund_abn",t:"string",d:"ABN"},{n:"fund_usi",t:"string",d:"USI"},{n:"fund_type",t:"string",d:"Type"},{n:"product_name",t:"string",d:"Product"},{n:"total_fee_percentage",t:"double",d:"Total fee %"},{n:"return_1y",t:"double",d:"1Y return %"},{n:"return_5y",t:"double",d:"5Y return %"},{n:"risk_level",t:"string",d:"Risk level"},{n:"my_super_product",t:"string",d:"MySuper product"}]},
+"GetFundDetailsRequest":{f:[{n:"fund_id",t:"string",d:"Fund ID"}]},
+"FundDetails":{f:[{n:"fund_id",t:"string",d:"Fund ID"},{n:"fund_name",t:"string",d:"Name"},{n:"fund_abn",t:"string",d:"ABN"},{n:"fund_usi",t:"string",d:"USI"},{n:"fund_type",t:"string",d:"Type"},{n:"rse_licensee",t:"string",d:"RSE licensee"},{n:"total_assets",t:"Money",d:"Total assets"},{n:"member_count",t:"int64",d:"Members"},{n:"my_super_product",t:"string",d:"MySuper"},{n:"investment_options",t:"repeated InvestmentOption",d:"Options"},{n:"fee_schedule",t:"FeeSchedule",d:"Fees"},{n:"insurance",t:"InsuranceOfferings",d:"Insurance"},{n:"performance",t:"repeated PerformanceMetric",d:"Performance"},{n:"pds_url",t:"string",d:"PDS URL"},{n:"website_url",t:"string",d:"Website"},{n:"data_as_of",t:"Timestamp",d:"Data date"}]},
+"InvestmentOption":{f:[{n:"option_name",t:"string",d:"Name"},{n:"risk_level",t:"string",d:"Risk"},{n:"return_1y",t:"double",d:"1Y %"},{n:"return_3y",t:"double",d:"3Y %"},{n:"return_5y",t:"double",d:"5Y %"},{n:"return_10y",t:"double",d:"10Y %"},{n:"asset_allocation",t:"repeated AssetAllocation",d:"Allocation"},{n:"investment_fee",t:"double",d:"Fee %"}]},
+"FeeSchedule":{f:[{n:"administration_fee_percentage",t:"double",d:"Admin %"},{n:"administration_fee_fixed",t:"Money",d:"Fixed admin fee"},{n:"investment_fee_percentage",t:"double",d:"Investment %"},{n:"buy_spread",t:"double",d:"Buy spread %"},{n:"sell_spread",t:"double",d:"Sell spread %"},{n:"indirect_cost_ratio",t:"double",d:"ICR"},{n:"total_annual_fee_example",t:"Money",d:"Total on $50k"}]},
+"InsuranceOfferings":{f:[{n:"default_life",t:"bool",d:"Default life"},{n:"default_tpd",t:"bool",d:"Default TPD"},{n:"default_income_protection",t:"bool",d:"Default IP"},{n:"tpd_definition",t:"string",d:"TPD definition"}]},
+"CompareFundsRequest":{f:[{n:"fund_ids",t:"repeated string",d:"Fund IDs (2-4)"},{n:"investment_option",t:"string",d:"Option to compare"},{n:"example_balance",t:"Money",d:"Example balance"}]},
+"CompareFundsResponse":{f:[{n:"comparisons",t:"repeated FundComparison",d:"Comparisons"},{n:"ai_recommendation",t:"string",d:"AI recommendation"},{n:"disclaimer",t:"string",d:"Disclaimer"}]},
+"FundComparison":{f:[{n:"fund",t:"FundDetails",d:"Fund details"},{n:"projected_fees_annual",t:"Money",d:"Annual fees"},{n:"projected_fees_10y",t:"Money",d:"10Y fees"},{n:"net_return_after_fees",t:"double",d:"Net return %"},{n:"apra_performance_rank",t:"int32",d:"APRA rank"},{n:"passed_apra_test",t:"bool",d:"Passed APRA test"},{n:"highlights",t:"repeated ComparisonHighlight",d:"Highlights"}]},
+"ComparisonHighlight":{f:[{n:"category",t:"string",d:"Category"},{n:"description",t:"string",d:"Description"},{n:"sentiment",t:"HighlightSentiment",d:"Sentiment"}]},
+"InitiateRolloverRequest":{f:[{n:"source_account_id",t:"string",d:"Source account"},{n:"destination_fund_usi",t:"string",d:"Destination USI"},{n:"destination_member_number",t:"string",d:"Destination member #"},{n:"rollover_type",t:"RolloverType",d:"Full/partial"},{n:"partial_amount",t:"Money",d:"Partial amount"}]},
+"RolloverResponse":{f:[{n:"rollover_id",t:"string",d:"Rollover ID"},{n:"status",t:"RolloverStatus",d:"Status"},{n:"source_fund",t:"string",d:"Source fund"},{n:"destination_fund",t:"string",d:"Destination fund"},{n:"amount",t:"Money",d:"Amount"},{n:"initiated_at",t:"Timestamp",d:"Initiated"},{n:"estimated_completion",t:"Timestamp",d:"Est. completion"},{n:"tracking_reference",t:"string",d:"Tracking ref"}]},
+"GetRolloverStatusRequest":{f:[{n:"rollover_id",t:"string",d:"Rollover ID"}]},
+"CalculateTaxEstimateRequest":{f:[{n:"financial_year",t:"string",d:'e.g. "2025-26"'},{n:"gross_income",t:"double",d:"Gross income"},{n:"employer_sg",t:"double",d:"Employer SG"},{n:"salary_sacrifice",t:"double",d:"Salary sacrifice"},{n:"personal_concessional",t:"double",d:"Personal concessional"},{n:"personal_non_concessional",t:"double",d:"Personal non-concessional"},{n:"super_balance",t:"double",d:"Super balance"},{n:"age",t:"int32",d:"Age"},{n:"include_carry_forward",t:"bool",d:"Include carry-forward"},{n:"investment_earnings_rate",t:"double",d:"Earnings rate"}]},
+"CalculateTaxEstimateResponse":{f:[{n:"estimate_id",t:"string",d:"Estimate ID"},{n:"financial_year",t:"string",d:"FY"},{n:"calculated_at",t:"Timestamp",d:"Calculated"},{n:"concessional",t:"ConcessionalSummary",d:"Concessional"},{n:"non_concessional",t:"NonConcessionalSummary",d:"Non-concessional"},{n:"tax_breakdown",t:"TaxBreakdown",d:"Tax breakdown"},{n:"potential_savings",t:"TaxSavings",d:"Savings"}]},
+"ConcessionalSummary":{f:[{n:"employer_sg",t:"double",d:"Employer SG"},{n:"salary_sacrifice",t:"double",d:"Salary sacrifice"},{n:"personal_deductible",t:"double",d:"Personal deductible"},{n:"total",t:"double",d:"Total"},{n:"cap",t:"double",d:"Cap"},{n:"carry_forward_available",t:"double",d:"Carry-forward"},{n:"excess_amount",t:"double",d:"Excess"}]},
+"NonConcessionalSummary":{f:[{n:"personal",t:"double",d:"Personal"},{n:"cap",t:"double",d:"Cap"},{n:"bring_forward_available",t:"bool",d:"Bring-forward available"},{n:"excess_amount",t:"double",d:"Excess"}]},
+"TaxBreakdown":{f:[{n:"contributions_tax",t:"double",d:"15% contributions tax"},{n:"division_293_tax",t:"double",d:"Division 293 (extra 15%)"},{n:"investment_earnings_tax",t:"double",d:"15% earnings tax"},{n:"excess_contributions_tax",t:"double",d:"Excess contributions tax"},{n:"total_tax_in_super",t:"double",d:"Total tax in super"}]},
+"TaxSavings":{f:[{n:"personal_income_tax_saved",t:"double",d:"Income tax saved"},{n:"effective_tax_rate",t:"double",d:"Effective rate"}]},
+"GetTaxEstimateRequest":{f:[{n:"estimate_id",t:"string",d:"Estimate ID"}]},
+"GetTaxEstimateResponse":{f:[{n:"estimate_id",t:"string",d:"ID"},{n:"financial_year",t:"string",d:"FY"},{n:"calculated_at",t:"Timestamp",d:"Calculated"},{n:"concessional",t:"ConcessionalSummary",d:"Concessional"},{n:"non_concessional",t:"NonConcessionalSummary",d:"Non-concessional"},{n:"tax_breakdown",t:"TaxBreakdown",d:"Breakdown"},{n:"potential_savings",t:"TaxSavings",d:"Savings"}]},
+"GetContributionCapsRequest":{f:[{n:"financial_year",t:"string",d:'e.g. "2025-26"'}]},
+"GetContributionCapsResponse":{f:[{n:"financial_year",t:"string",d:"FY"},{n:"concessional",t:"ConcessionalCap",d:"Concessional cap"},{n:"non_concessional",t:"NonConcessionalCap",d:"Non-concessional cap"},{n:"total_super_balance",t:"double",d:"Total balance"},{n:"transfer_balance",t:"TransferBalanceCap",d:"Transfer balance cap"}]},
+"ConcessionalCap":{f:[{n:"annual_cap",t:"double",d:"Cap ($30,000)"},{n:"used",t:"double",d:"Used"},{n:"remaining",t:"double",d:"Remaining"},{n:"carry_forward",t:"CarryForward",d:"Carry-forward"}]},
+"CarryForward":{f:[{n:"eligible",t:"bool",d:"Eligible (balance<$500k)"},{n:"unused_amounts",t:"repeated UnusedAmount",d:"Prior year unused"},{n:"total_available",t:"double",d:"Total available"}]},
+"UnusedAmount":{f:[{n:"financial_year",t:"string",d:"Source FY"},{n:"amount",t:"double",d:"Amount"}]},
+"NonConcessionalCap":{f:[{n:"annual_cap",t:"double",d:"Cap ($120,000)"},{n:"used",t:"double",d:"Used"},{n:"remaining",t:"double",d:"Remaining"},{n:"bring_forward",t:"BringForward",d:"Bring-forward"}]},
+"BringForward":{f:[{n:"eligible",t:"bool",d:"Eligible"},{n:"triggered",t:"bool",d:"Triggered"},{n:"period",t:"string",d:"none/two_year/three_year"},{n:"max_amount",t:"double",d:"Max amount"}]},
+"TransferBalanceCap":{f:[{n:"general_cap",t:"double",d:"General TBC ($1.9M)"},{n:"personal_cap",t:"double",d:"Personal TBC"},{n:"used",t:"double",d:"Used"},{n:"remaining",t:"double",d:"Remaining"}]},
+"AssessDivision293Request":{f:[{n:"financial_year",t:"string",d:'e.g. "2025-26"'},{n:"taxable_income",t:"double",d:"Taxable income"},{n:"reportable_fringe_benefits",t:"double",d:"Fringe benefits"},{n:"net_investment_losses",t:"double",d:"Investment losses"},{n:"concessional_contributions",t:"double",d:"Concessional contributions"}]},
+"AssessDivision293Response":{f:[{n:"assessment_id",t:"string",d:"ID"},{n:"financial_year",t:"string",d:"FY"},{n:"division_293_income",t:"double",d:"Div 293 income"},{n:"threshold",t:"double",d:"Threshold ($250k)"},{n:"exceeds_threshold",t:"bool",d:"Exceeds threshold"},{n:"taxable_amount",t:"double",d:"Taxable amount"},{n:"additional_tax",t:"double",d:"Extra 15% tax"},{n:"status",t:"string",d:"Status"},{n:"explanation",t:"string",d:"Explanation"}]},
+"GetDivision293HistoryRequest":{f:[{n:"limit",t:"int32",d:"Max results"}]},
+"GetDivision293HistoryResponse":{f:[{n:"assessments",t:"repeated AssessDivision293Response",d:"Assessments"}]},
+"CreateDeductionNoticeRequest":{f:[{n:"account_id",t:"string",d:"Account ID"},{n:"amount",t:"double",d:"Amount"},{n:"financial_year",t:"string",d:"FY"},{n:"contribution_date",t:"string",d:"Date"},{n:"notes",t:"string",d:"Notes"}]},
+"CreateDeductionNoticeResponse":{f:[{n:"deduction",t:"TaxDeduction",d:"Created deduction"}]},
+"ListDeductionsRequest":{f:[{n:"financial_year",t:"string",d:"FY filter"}]},
+"ListDeductionsResponse":{f:[{n:"deductions",t:"repeated TaxDeduction",d:"Deductions"}]},
+"TaxDeduction":{f:[{n:"deduction_id",t:"string",d:"ID"},{n:"account_id",t:"string",d:"Account"},{n:"fund_name",t:"string",d:"Fund"},{n:"amount",t:"double",d:"Amount"},{n:"financial_year",t:"string",d:"FY"},{n:"status",t:"string",d:"draft/submitted/acknowledged/rejected/claimed"},{n:"submitted_at",t:"Timestamp",d:"Submitted"},{n:"acknowledged_at",t:"Timestamp",d:"Acknowledged"},{n:"acknowledgement_reference",t:"string",d:"Fund ref"},{n:"tax_saving",t:"double",d:"Est. saving"}]},
+"AcknowledgeDeductionRequest":{f:[{n:"deduction_id",t:"string",d:"Deduction ID"},{n:"acknowledged_date",t:"string",d:"Date"},{n:"acknowledged_amount",t:"double",d:"Amount"},{n:"reference_number",t:"string",d:"Reference"}]},
+"AcknowledgeDeductionResponse":{f:[{n:"deduction",t:"TaxDeduction",d:"Updated"}]},
+"GetAnnualTaxReportRequest":{f:[{n:"financial_year",t:"string",d:'e.g. "2025-26"'}]},
+"GetAnnualTaxReportResponse":{f:[{n:"financial_year",t:"string",d:"FY"},{n:"generated_at",t:"Timestamp",d:"Generated"},{n:"summary",t:"TaxReportSummary",d:"Summary"},{n:"accounts",t:"repeated AccountTaxDetail",d:"Per-account"},{n:"ato_pre_fill",t:"ATOPreFill",d:"ATO pre-fill"}]},
+"TaxReportSummary":{f:[{n:"total_concessional",t:"double",d:"Total concessional"},{n:"total_non_concessional",t:"double",d:"Total non-concessional"},{n:"total_contributions_tax",t:"double",d:"Contributions tax"},{n:"division_293_tax",t:"double",d:"Div 293 tax"},{n:"total_deductions_claimed",t:"double",d:"Deductions"},{n:"net_tax_position",t:"double",d:"Net position"}]},
+"AccountTaxDetail":{f:[{n:"fund_name",t:"string",d:"Fund"},{n:"member_number",t:"string",d:"Member #"},{n:"contributions",t:"repeated QuarterlyContribution",d:"Quarterly"}]},
+"QuarterlyContribution":{f:[{n:"quarter",t:"string",d:"Q1-Q4"},{n:"type",t:"string",d:"Type"},{n:"amount",t:"double",d:"Amount"}]},
+"ATOPreFill":{f:[{n:"superannuation_contributions",t:"double",d:"Total super"},{n:"employer_contributions",t:"double",d:"Employer"},{n:"personal_deductible_contributions",t:"double",d:"Personal deductible"}]},
+"GetTaxOptimisationsRequest":{f:[]},
+"GetTaxOptimisationsResponse":{f:[{n:"suggestions",t:"repeated TaxOptimisation",d:"Suggestions"}]},
+"TaxOptimisation":{f:[{n:"strategy_id",t:"string",d:"ID"},{n:"title",t:"string",d:"Title"},{n:"description",t:"string",d:"Description"},{n:"potential_saving",t:"double",d:"Saving"},{n:"priority",t:"string",d:"high/medium/low"},{n:"category",t:"string",d:"Category"},{n:"action_required",t:"string",d:"Action"},{n:"deadline",t:"string",d:"Deadline"},{n:"disclaimer",t:"string",d:"Disclaimer"}]},
+"GetRecommendationsRequest":{f:[{n:"category",t:"string",d:"all/contribution/investment"},{n:"limit",t:"int32",d:"Max results"}]},
+"GetRecommendationsResponse":{f:[{n:"recommendations",t:"repeated Recommendation",d:"Recommendations"},{n:"generated_at",t:"Timestamp",d:"Generated"},{n:"disclaimer",t:"string",d:"Disclaimer"}]},
+"Recommendation":{f:[{n:"recommendation_id",t:"string",d:"ID"},{n:"category",t:"string",d:"Category"},{n:"title",t:"string",d:"Title"},{n:"summary",t:"string",d:"Summary"},{n:"detailed_explanation",t:"string",d:"Detail"},{n:"impact",t:"RecommendationImpact",d:"Impact"},{n:"priority",t:"string",d:"Priority"},{n:"confidence",t:"double",d:"0.0-1.0"},{n:"actionable",t:"bool",d:"Actionable"},{n:"action_url",t:"string",d:"Action URL"},{n:"expires_at",t:"Timestamp",d:"Expires"},{n:"disclaimer",t:"string",d:"Disclaimer"}]},
+"RecommendationImpact":{f:[{n:"metric",t:"string",d:"Metric name"},{n:"current_value",t:"double",d:"Current"},{n:"projected_value",t:"double",d:"Projected"},{n:"saving_amount",t:"double",d:"Saving"}]},
+"RecommendationFeedbackRequest":{f:[{n:"recommendation_id",t:"string",d:"ID"},{n:"rating",t:"string",d:"helpful/not_helpful/acted_on"},{n:"comment",t:"string",d:"Comment"}]},
+"RecommendationFeedbackResponse":{f:[]},
+"CreateChatSessionRequest":{f:[{n:"context",t:"string",d:"general/statement/fund_comparison"},{n:"related_entity_id",t:"string",d:"Entity ID"}]},
+"ChatSession":{f:[{n:"session_id",t:"string",d:"Session ID"},{n:"context",t:"string",d:"Context"},{n:"created_at",t:"Timestamp",d:"Created"},{n:"expires_at",t:"Timestamp",d:"Expires"}]},
+"SendMessageRequest":{f:[{n:"session_id",t:"string",d:"Session ID"},{n:"message",t:"string",d:"User message"},{n:"attachments",t:"repeated ChatAttachment",d:"Attachments"}]},
+"ChatAttachment":{f:[{n:"type",t:"string",d:"statement/account/fund"},{n:"entity_id",t:"string",d:"Entity ID"}]},
+"ChatResponse":{f:[{n:"message",t:"ChatMessage",d:"Response message"},{n:"suggested_questions",t:"repeated string",d:"Follow-ups"},{n:"disclaimer",t:"string",d:"Disclaimer"}]},
+"ChatStreamChunk":{f:[{n:"session_id",t:"string",d:"Session ID"},{n:"message_id",t:"string",d:"Message ID"},{n:"content_delta",t:"string",d:"Text chunk"},{n:"is_final",t:"bool",d:"Final chunk"},{n:"sources",t:"repeated ChatSource",d:"Sources (final only)"}]},
+"ChatMessage":{f:[{n:"message_id",t:"string",d:"Message ID"},{n:"role",t:"string",d:"user/assistant"},{n:"content",t:"string",d:"Content"},{n:"timestamp",t:"Timestamp",d:"Sent"},{n:"sources",t:"repeated ChatSource",d:"Sources"},{n:"related_actions",t:"repeated ChatAction",d:"Actions"}]},
+"ChatSource":{f:[{n:"title",t:"string",d:"Title"},{n:"url",t:"string",d:"URL"},{n:"type",t:"string",d:"regulation/ato_guidance/apra_standard"}]},
+"ChatAction":{f:[{n:"label",t:"string",d:"Label"},{n:"deep_link",t:"string",d:"Deep link"}]},
+"GetChatHistoryRequest":{f:[{n:"session_id",t:"string",d:"Session ID"},{n:"limit",t:"int32",d:"Max messages"},{n:"before",t:"Timestamp",d:"Before timestamp"}]},
+"GetChatHistoryResponse":{f:[{n:"messages",t:"repeated ChatMessage",d:"Messages"},{n:"has_more",t:"bool",d:"More available"}]},
+"RetirementProjectionRequest":{f:[{n:"current_age",t:"int32",d:"Current age"},{n:"retirement_age",t:"int32",d:"Retirement age"},{n:"current_super_balance",t:"double",d:"Super balance"},{n:"annual_salary",t:"double",d:"Salary"},{n:"salary_growth_rate",t:"double",d:"Growth rate"},{n:"additional_contributions_per_year",t:"double",d:"Extra contributions"},{n:"investment_strategy",t:"string",d:"conservative/balanced/growth"},{n:"desired_annual_retirement_income",t:"double",d:"Target income"},{n:"include_age_pension",t:"bool",d:"Include pension"},{n:"inflation_rate",t:"double",d:"Inflation"},{n:"simulation_runs",t:"int32",d:"Monte Carlo runs"}]},
+"RetirementProjection":{f:[{n:"projection_id",t:"string",d:"ID"},{n:"scenarios",t:"ProjectionScenarios",d:"Scenarios"},{n:"year_by_year",t:"repeated YearlyProjection",d:"Yearly data"},{n:"age_pension",t:"AgePensionEligibility",d:"Pension"},{n:"insights",t:"repeated string",d:"Insights"},{n:"disclaimer",t:"string",d:"Disclaimer"}]},
+"ProjectionScenarios":{f:[{n:"pessimistic",t:"ProjectionScenario",d:"Pessimistic"},{n:"base",t:"ProjectionScenario",d:"Base"},{n:"optimistic",t:"ProjectionScenario",d:"Optimistic"}]},
+"ProjectionScenario":{f:[{n:"projected_balance",t:"double",d:"Final balance"},{n:"annual_retirement_income",t:"double",d:"Annual income"},{n:"years_of_income",t:"double",d:"Years of income"},{n:"meets_goal",t:"bool",d:"Meets goal"},{n:"shortfall",t:"double",d:"Shortfall"},{n:"probability",t:"double",d:"Probability"}]},
+"YearlyProjection":{f:[{n:"age",t:"int32",d:"Age"},{n:"year",t:"int32",d:"Year"},{n:"balance_base",t:"double",d:"Base balance"},{n:"balance_pessimistic",t:"double",d:"Pessimistic"},{n:"balance_optimistic",t:"double",d:"Optimistic"},{n:"contributions",t:"double",d:"Contributions"},{n:"earnings",t:"double",d:"Earnings"}]},
+"AgePensionEligibility":{f:[{n:"eligible",t:"bool",d:"Eligible"},{n:"eligible_age",t:"int32",d:"Eligible age"},{n:"estimated_fortnightly_payment",t:"double",d:"Fortnightly payment"}]},
+"FundPerformancePredictionRequest":{f:[{n:"fund_ids",t:"repeated string",d:"Fund IDs"},{n:"timeframe_years",t:"int32",d:"Timeframe"},{n:"scenario_type",t:"string",d:"base/optimistic/pessimistic/all"}]},
+"FundPerformancePrediction":{f:[{n:"predictions",t:"repeated FundPrediction",d:"Predictions"},{n:"model_version",t:"string",d:"Model version"},{n:"disclaimer",t:"string",d:"Disclaimer"}]},
+"FundPrediction":{f:[{n:"fund_id",t:"string",d:"Fund ID"},{n:"fund_name",t:"string",d:"Name"},{n:"risk_score",t:"double",d:"Risk 1-7"},{n:"confidence_interval",t:"string",d:'e.g. "95% CI: 4.2%-9.8%"'}]},
+"GetAnomaliesRequest":{f:[{n:"status",t:"string",d:"new/reviewed/dismissed/resolved"},{n:"severity",t:"string",d:"critical/warning/info"}]},
+"GetAnomaliesResponse":{f:[{n:"anomalies",t:"repeated Anomaly",d:"Anomalies"}]},
+"Anomaly":{f:[{n:"anomaly_id",t:"string",d:"ID"},{n:"type",t:"string",d:"missing_employer_contribution etc."},{n:"severity",t:"string",d:"Severity"},{n:"title",t:"string",d:"Title"},{n:"description",t:"string",d:"Description"},{n:"account_id",t:"string",d:"Account"},{n:"detected_at",t:"Timestamp",d:"Detected"},{n:"affected_period",t:"DateRange",d:"Period"},{n:"expected_value",t:"double",d:"Expected"},{n:"actual_value",t:"double",d:"Actual"},{n:"status",t:"string",d:"Status"},{n:"suggested_action",t:"string",d:"Action"}]},
+"DateRange":{f:[{n:"from",t:"string",d:"Start (YYYY-MM-DD)"},{n:"to",t:"string",d:"End (YYYY-MM-DD)"}]},
+"DismissAnomalyRequest":{f:[{n:"anomaly_id",t:"string",d:"Anomaly ID"},{n:"reason",t:"string",d:"Reason"}]},
+"DismissAnomalyResponse":{f:[]},
+"ParseStatementRequest":{f:[{n:"file_data",t:"bytes",d:"PDF bytes"},{n:"file_name",t:"string",d:"File name"},{n:"fund_hint",t:"string",d:"Fund hint"}]},
+"ParseStatementJob":{f:[{n:"job_id",t:"string",d:"Job ID"},{n:"status",t:"string",d:"queued/processing/completed/failed"},{n:"progress",t:"double",d:"Progress 0-100"},{n:"error",t:"string",d:"Error"},{n:"completed_at",t:"Timestamp",d:"Completed"}]},
+"GetParseStatusRequest":{f:[{n:"job_id",t:"string",d:"Job ID"}]},
+"GetParsedResultRequest":{f:[{n:"job_id",t:"string",d:"Job ID"}]},
+"ParsedStatement":{f:[{n:"job_id",t:"string",d:"Job ID"},{n:"fund_details",t:"FundInfo",d:"Fund info"},{n:"member_details",t:"MemberInfo",d:"Member"},{n:"period",t:"DateRange",d:"Period"},{n:"balance_summary",t:"BalanceSummary",d:"Balance"},{n:"contributions",t:"repeated ParsedContribution",d:"Contributions"},{n:"fees",t:"repeated ParsedFee",d:"Fees"},{n:"insurance",t:"ParsedInsurance",d:"Insurance"},{n:"investment_options",t:"repeated ParsedInvestment",d:"Investments"},{n:"confidence",t:"double",d:"Confidence 0-1"},{n:"warnings",t:"repeated string",d:"Warnings"}]},
+"FundInfo":{f:[{n:"fund_name",t:"string",d:"Name"},{n:"abn",t:"string",d:"ABN"},{n:"usi",t:"string",d:"USI"},{n:"product_name",t:"string",d:"Product"}]},
+"MemberInfo":{f:[{n:"member_number",t:"string",d:"Member #"},{n:"name",t:"string",d:"Name"}]},
+"BalanceSummary":{f:[{n:"opening_balance",t:"double",d:"Opening"},{n:"closing_balance",t:"double",d:"Closing"},{n:"total_contributions",t:"double",d:"Contributions"},{n:"total_earnings",t:"double",d:"Earnings"},{n:"total_fees",t:"double",d:"Fees"},{n:"total_insurance_premiums",t:"double",d:"Premiums"},{n:"total_tax",t:"double",d:"Tax"}]},
+"ParsedContribution":{f:[{n:"date",t:"string",d:"Date"},{n:"type",t:"string",d:"Type"},{n:"amount",t:"double",d:"Amount"},{n:"employer",t:"string",d:"Employer"}]},
+"ParsedFee":{f:[{n:"type",t:"string",d:"Type"},{n:"amount",t:"double",d:"Amount"},{n:"frequency",t:"string",d:"Frequency"}]},
+"ParsedInsurance":{f:[{n:"life_insurance",t:"double",d:"Life premium"},{n:"tpd_insurance",t:"double",d:"TPD premium"},{n:"income_protection",t:"double",d:"IP premium"},{n:"total_premiums",t:"double",d:"Total"}]},
+"ParsedInvestment":{f:[{n:"option_name",t:"string",d:"Name"},{n:"allocation",t:"double",d:"Allocation %"},{n:"balance",t:"double",d:"Balance"},{n:"return_rate",t:"double",d:"Return %"}]},
+"UploadStatementRequest":{f:[{n:"file_content",t:"bytes",d:"PDF (max 10MB)"},{n:"file_name",t:"string",d:"File name"},{n:"content_type",t:"string",d:"application/pdf"},{n:"fund_hint",t:"string",d:"Fund hint"},{n:"financial_year",t:"string",d:"FY"},{n:"idempotency_key",t:"string",d:"UUID"}]},
+"UploadStatementResponse":{f:[{n:"job_id",t:"string",d:"Job ID"},{n:"document_id",t:"string",d:"Document ID"},{n:"state",t:"ParseState",d:"Initial state"},{n:"message",t:"string",d:"Status message"}]},
+"ParseJobStatus":{f:[{n:"job_id",t:"string",d:"Job ID"},{n:"document_id",t:"string",d:"Document ID"},{n:"state",t:"ParseState",d:"State"},{n:"progress",t:"double",d:"Progress 0-1"},{n:"message",t:"string",d:"Message"},{n:"started_at",t:"Timestamp",d:"Started"},{n:"completed_at",t:"Timestamp",d:"Completed"},{n:"error",t:"ParseError",d:"Error"}]},
+"ParseError":{f:[{n:"code",t:"string",d:"Error code"},{n:"message",t:"string",d:"Message"},{n:"detail",t:"string",d:"Detail"}]},
+"GetParsedStatementRequest":{f:[{n:"document_id",t:"string",d:"Document ID"}]},
+"Document":{f:[{n:"document_id",t:"string",d:"ID"},{n:"user_id",t:"string",d:"Owner"},{n:"file_name",t:"string",d:"File name"},{n:"file_size_bytes",t:"int64",d:"Size"},{n:"content_type",t:"string",d:"Type"},{n:"state",t:"DocumentState",d:"State"},{n:"fund_name",t:"string",d:"Fund"},{n:"financial_year",t:"string",d:"FY"},{n:"uploaded_at",t:"Timestamp",d:"Uploaded"},{n:"parsed_at",t:"Timestamp",d:"Parsed"}]},
+"ListDocumentsRequest":{f:[{n:"financial_year",t:"string",d:"Filter"},{n:"page_size",t:"int32",d:"Max"},{n:"page_token",t:"string",d:"Token"}]},
+"ListDocumentsResponse":{f:[{n:"documents",t:"repeated Document",d:"Documents"},{n:"next_page_token",t:"string",d:"Next page"},{n:"total_count",t:"int32",d:"Total"}]},
+"GetDocumentRequest":{f:[{n:"document_id",t:"string",d:"Document ID"}]},
+"DeleteDocumentRequest":{f:[{n:"document_id",t:"string",d:"Document ID"}]},
+"DeleteDocumentResponse":{f:[]},
+"RetryParsingRequest":{f:[{n:"document_id",t:"string",d:"Document ID"}]},
+"ListNotificationsRequest":{f:[{n:"status",t:"string",d:"unread/read/all"},{n:"category",t:"string",d:"Category"},{n:"limit",t:"int32",d:"Max"},{n:"cursor",t:"string",d:"Cursor"}]},
+"ListNotificationsResponse":{f:[{n:"notifications",t:"repeated Notification",d:"Notifications"},{n:"next_cursor",t:"string",d:"Next cursor"},{n:"unread_count",t:"int32",d:"Unread"}]},
+"Notification":{f:[{n:"notification_id",t:"string",d:"ID"},{n:"category",t:"string",d:"Category"},{n:"title",t:"string",d:"Title"},{n:"body",t:"string",d:"Body"},{n:"status",t:"string",d:"unread/read"},{n:"priority",t:"string",d:"critical/high/normal/low"},{n:"deep_link",t:"string",d:"Deep link"},{n:"metadata",t:"map<string,string>",d:"Metadata"},{n:"created_at",t:"Timestamp",d:"Created"},{n:"read_at",t:"Timestamp",d:"Read"}]},
+"MarkAsReadRequest":{f:[{n:"notification_id",t:"string",d:"ID"}]},
+"MarkAsReadResponse":{f:[]},
+"MarkAllAsReadRequest":{f:[]},
+"MarkAllAsReadResponse":{f:[]},
+"GetUnreadCountRequest":{f:[]},
+"UnreadCountResponse":{f:[{n:"count",t:"int32",d:"Total unread"},{n:"by_category",t:"map<string,int32>",d:"By category"}]},
+"GetPreferencesRequest":{f:[]},
+"NotificationPreferences":{f:[{n:"push",t:"PushPreferences",d:"Push prefs"},{n:"email",t:"EmailPreferences",d:"Email prefs"},{n:"sms",t:"SMSPreferences",d:"SMS prefs"}]},
+"UpdatePreferencesRequest":{f:[{n:"preferences",t:"NotificationPreferences",d:"Preferences"}]},
+"PushPreferences":{f:[{n:"enabled",t:"bool",d:"Enabled"},{n:"categories",t:"CategoryPreferences",d:"Categories"},{n:"quiet_hours",t:"QuietHours",d:"Quiet hours"}]},
+"EmailPreferences":{f:[{n:"enabled",t:"bool",d:"Enabled"},{n:"frequency",t:"string",d:"immediate/daily/weekly"},{n:"categories",t:"CategoryPreferences",d:"Categories"}]},
+"SMSPreferences":{f:[{n:"enabled",t:"bool",d:"Enabled"},{n:"categories",t:"CategoryPreferences",d:"Categories"}]},
+"CategoryPreferences":{f:[{n:"contribution",t:"bool",d:"Contributions"},{n:"account",t:"bool",d:"Account"},{n:"tax",t:"bool",d:"Tax"},{n:"ai_insight",t:"bool",d:"AI"},{n:"security",t:"bool",d:"Security"},{n:"system",t:"bool",d:"System"},{n:"compliance",t:"bool",d:"Compliance"}]},
+"QuietHours":{f:[{n:"enabled",t:"bool",d:"Enabled"},{n:"from",t:"string",d:"Start (HH:MM)"},{n:"to",t:"string",d:"End (HH:MM)"},{n:"timezone",t:"string",d:"IANA timezone"}]},
+"RegisterDeviceRequest":{f:[{n:"device_token",t:"string",d:"APNs token"},{n:"platform",t:"string",d:"ios"},{n:"device_name",t:"string",d:"Device name"},{n:"os_version",t:"string",d:"OS version"},{n:"app_version",t:"string",d:"App version"}]},
+"Device":{f:[{n:"device_id",t:"string",d:"ID"},{n:"device_token",t:"string",d:"Token"},{n:"platform",t:"string",d:"Platform"},{n:"device_name",t:"string",d:"Name"},{n:"os_version",t:"string",d:"OS"},{n:"app_version",t:"string",d:"App"},{n:"registered_at",t:"Timestamp",d:"Registered"},{n:"last_active_at",t:"Timestamp",d:"Last active"}]},
+"ListDevicesRequest":{f:[]},
+"ListDevicesResponse":{f:[{n:"devices",t:"repeated Device",d:"Devices"}]},
+"UnregisterDeviceRequest":{f:[{n:"device_id",t:"string",d:"Device ID"}]},
+"UnregisterDeviceResponse":{f:[]},
+"SendNotificationRequest":{f:[{n:"user_id",t:"string",d:"User ID"},{n:"category",t:"string",d:"Category"},{n:"title",t:"string",d:"Title"},{n:"body",t:"string",d:"Body"},{n:"priority",t:"string",d:"Priority"},{n:"deep_link",t:"string",d:"Deep link"},{n:"metadata",t:"map<string,string>",d:"Metadata"},{n:"channels",t:"repeated string",d:"push/email/sms"}]},
+"SendNotificationResponse":{f:[{n:"notification_id",t:"string",d:"ID"},{n:"delivery_status",t:"map<string,string>",d:"Channel status"}]},
+"SendBulkNotificationRequest":{f:[{n:"user_ids",t:"repeated string",d:"User IDs"},{n:"category",t:"string",d:"Category"},{n:"title",t:"string",d:"Title"},{n:"body",t:"string",d:"Body"},{n:"priority",t:"string",d:"Priority"}]},
+"SendBulkNotificationResponse":{f:[{n:"sent_count",t:"int32",d:"Sent"},{n:"failed_count",t:"int32",d:"Failed"}]},
+"GetAuditLogRequest":{f:[{n:"entry_id",t:"string",d:"Entry ID"}]},
+"GetAuditLogResponse":{f:[{n:"entry",t:"AuditLogEntry",d:"Audit entry"}]},
+"AuditLogEntry":{f:[{n:"entry_id",t:"string",d:"ID"},{n:"event_type",t:"string",d:"Event type"},{n:"actor_id",t:"string",d:"Actor"},{n:"actor_type",t:"string",d:"user/service/admin"},{n:"resource_type",t:"string",d:"Resource type"},{n:"resource_id",t:"string",d:"Resource ID"},{n:"action",t:"string",d:"create/read/update/delete"},{n:"ip_address_hash",t:"string",d:"IP hash"},{n:"user_agent",t:"string",d:"User agent"},{n:"correlation_id",t:"string",d:"Correlation ID"},{n:"metadata",t:"map<string,string>",d:"Metadata"},{n:"change_summary",t:"string",d:"Changes"},{n:"timestamp",t:"Timestamp",d:"Timestamp"}]},
+"SearchAuditLogsRequest":{f:[{n:"user_id",t:"string",d:"User filter"},{n:"resource_type",t:"string",d:"Resource filter"},{n:"resource_id",t:"string",d:"Resource ID"},{n:"event_type",t:"string",d:"Event filter"},{n:"from",t:"Timestamp",d:"Start"},{n:"to",t:"Timestamp",d:"End"},{n:"page_size",t:"int32",d:"Max"},{n:"page_token",t:"string",d:"Token"}]},
+"SearchAuditLogsResponse":{f:[{n:"entries",t:"repeated AuditLogEntry",d:"Entries"},{n:"next_page_token",t:"string",d:"Next page"},{n:"total_count",t:"int32",d:"Total"}]},
+"ListUserConsentsRequest":{f:[{n:"user_id",t:"string",d:"User ID"}]},
+"ListUserConsentsResponse":{f:[{n:"consents",t:"repeated ConsentRecord",d:"Consents"}]},
+"ConsentRecord":{f:[{n:"consent_id",t:"string",d:"ID"},{n:"user_id",t:"string",d:"User"},{n:"consent_type",t:"string",d:"Type"},{n:"status",t:"string",d:"granted/revoked/expired"},{n:"purpose",t:"string",d:"Purpose"},{n:"data_categories",t:"string",d:"Categories"},{n:"third_party",t:"string",d:"Third party"},{n:"granted_at",t:"Timestamp",d:"Granted"},{n:"revoked_at",t:"Timestamp",d:"Revoked"},{n:"expires_at",t:"Timestamp",d:"Expires"},{n:"version",t:"string",d:"Version"}]},
+"GetConsentAuditTrailRequest":{f:[{n:"user_id",t:"string",d:"User ID"},{n:"consent_type",t:"string",d:"Type"}]},
+"GetConsentAuditTrailResponse":{f:[{n:"history",t:"repeated ConsentRecord",d:"History"}]},
+"SubmitPrivacyRequestRequest":{f:[{n:"request_type",t:"PrivacyRequestType",d:"Type"},{n:"description",t:"string",d:"Description"}]},
+"PrivacyRequest":{f:[{n:"request_id",t:"string",d:"ID"},{n:"user_id",t:"string",d:"User"},{n:"request_type",t:"PrivacyRequestType",d:"Type"},{n:"status",t:"PrivacyRequestStatus",d:"Status"},{n:"description",t:"string",d:"Description"},{n:"submitted_at",t:"Timestamp",d:"Submitted"},{n:"completed_at",t:"Timestamp",d:"Completed"},{n:"deadline",t:"Timestamp",d:"30-day deadline"},{n:"response_summary",t:"string",d:"Response"}]},
+"GetPrivacyRequestStatusRequest":{f:[{n:"request_id",t:"string",d:"Request ID"}]},
+"ListPrivacyRequestsRequest":{f:[{n:"user_id",t:"string",d:"User"},{n:"page_size",t:"int32",d:"Max"},{n:"page_token",t:"string",d:"Token"}]},
+"ListPrivacyRequestsResponse":{f:[{n:"requests",t:"repeated PrivacyRequest",d:"Requests"},{n:"next_page_token",t:"string",d:"Next page"}]},
+"GetAMLStatusRequest":{f:[{n:"user_id",t:"string",d:"User ID"}]},
+"AMLStatus":{f:[{n:"user_id",t:"string",d:"User"},{n:"risk_level",t:"AMLRiskLevel",d:"Risk level"},{n:"is_flagged",t:"bool",d:"Flagged"},{n:"last_review_date",t:"string",d:"Last review"},{n:"next_review_date",t:"string",d:"Next review"},{n:"flags",t:"repeated string",d:"Flags"}]},
+"ReportSuspiciousActivityRequest":{f:[{n:"user_id",t:"string",d:"User"},{n:"transaction_id",t:"string",d:"Transaction"},{n:"description",t:"string",d:"Description"},{n:"activity_type",t:"SuspiciousActivityType",d:"Type"}]},
+"SuspiciousActivityReport":{f:[{n:"report_id",t:"string",d:"ID"},{n:"user_id",t:"string",d:"User"},{n:"activity_type",t:"SuspiciousActivityType",d:"Type"},{n:"description",t:"string",d:"Description"},{n:"reported_at",t:"Timestamp",d:"Reported"},{n:"austrac_reported",t:"bool",d:"AUSTRAC reported"}]},
+"GenerateRegulatoryReportRequest":{f:[{n:"report_type",t:"RegulatoryReportType",d:"Type"},{n:"period",t:"string",d:"Period"}]},
+"RegulatoryReport":{f:[{n:"report_id",t:"string",d:"ID"},{n:"report_type",t:"RegulatoryReportType",d:"Type"},{n:"period",t:"string",d:"Period"},{n:"status",t:"string",d:"Status"},{n:"download_url",t:"string",d:"Download URL"},{n:"generated_at",t:"Timestamp",d:"Generated"}]},
+"ListRegulatoryReportsRequest":{f:[{n:"report_type",t:"RegulatoryReportType",d:"Type filter"},{n:"page_size",t:"int32",d:"Max"},{n:"page_token",t:"string",d:"Token"}]},
+"ListRegulatoryReportsResponse":{f:[{n:"reports",t:"repeated RegulatoryReport",d:"Reports"},{n:"next_page_token",t:"string",d:"Next page"}]},
+"GetRetentionPolicyRequest":{f:[]},
+"RetentionPolicy":{f:[{n:"rules",t:"repeated RetentionRule",d:"Rules"}]},
+"RetentionRule":{f:[{n:"data_category",t:"string",d:"Category"},{n:"retention_years",t:"int32",d:"Years"},{n:"regulatory_basis",t:"string",d:"Regulation"},{n:"description",t:"string",d:"Description"}]},
+};
+
+const E={
+"AuthProvider":["UNSPECIFIED","EMAIL","APPLE","GOOGLE"],
+"MFAMethod":["UNSPECIFIED","TOTP","SMS","BIOMETRIC"],
+"UserStatus":["UNSPECIFIED","ACTIVE","SUSPENDED","PENDING_VERIFICATION","DEACTIVATED"],
+"KYCLevel":["UNSPECIFIED","NONE","BASIC","STANDARD","ENHANCED"],
+"KYCVerificationStatus":["UNSPECIFIED","PENDING","IN_REVIEW","VERIFIED","REJECTED"],
+"DocumentType":["UNSPECIFIED","DRIVERS_LICENCE","PASSPORT","MEDICARE_CARD","PROOF_OF_AGE"],
+"ConsentType":["UNSPECIFIED","DATA_COLLECTION","DATA_SHARING","MARKETING","AI_PROCESSING","FUND_DATA_ACCESS","ATO_DATA_ACCESS"],
+"ConsentStatus":["UNSPECIFIED","ACTIVE","EXPIRED","REVOKED"],
+"AccountType":["UNSPECIFIED","ACCUMULATION","DEFINED_BENEFIT","RETIREMENT_INCOME","TRANSITION_TO_RETIREMENT"],
+"AccountStatus":["UNSPECIFIED","ACTIVE","INACTIVE","LINKING","LINK_FAILED","CLOSED"],
+"SyncStatus":["UNSPECIFIED","SUCCESS","PARTIAL","FAILED","RATE_LIMITED"],
+"Granularity":["UNSPECIFIED","DAILY","WEEKLY","MONTHLY","QUARTERLY","YEARLY"],
+"ContributionType":["UNSPECIFIED","EMPLOYER_SG","SALARY_SACRIFICE","PERSONAL_CONCESSIONAL","PERSONAL_NON_CONCESSIONAL","SPOUSE","GOVERNMENT_CO_CONTRIBUTION","LOW_INCOME_SUPER_TAX_OFFSET","ROLLOVER_IN","ROLLOVER_OUT"],
+"InsuranceCoverType":["UNSPECIFIED","DEFAULT","VOLUNTARY","FIXED","UNITISED"],
+"PerformancePeriod":["UNSPECIFIED","1_MONTH","3_MONTHS","6_MONTHS","1_YEAR","3_YEARS","5_YEARS","10_YEARS","SINCE_INCEPTION"],
+"SortBy":["UNSPECIFIED","PERFORMANCE","FEES","NAME","SIZE"],
+"HighlightSentiment":["UNSPECIFIED","POSITIVE","NEUTRAL","NEGATIVE"],
+"RolloverType":["UNSPECIFIED","FULL","PARTIAL"],
+"RolloverStatus":["UNSPECIFIED","INITIATED","PROCESSING","AWAITING_FUND","COMPLETED","FAILED","CANCELLED"],
+"ParseState":["UNSPECIFIED","QUEUED","EXTRACTING","STRUCTURING","VALIDATING","COMPLETED","FAILED","NEEDS_REVIEW"],
+"DocumentState":["UNSPECIFIED","UPLOADED","PROCESSING","PARSED","FAILED","ARCHIVED"],
+"PrivacyRequestType":["UNSPECIFIED","ACCESS","CORRECTION","DELETION","EXPORT","RESTRICTION"],
+"PrivacyRequestStatus":["UNSPECIFIED","SUBMITTED","IN_PROGRESS","COMPLETED","REJECTED"],
+"AMLRiskLevel":["UNSPECIFIED","LOW","MEDIUM","HIGH","BLOCKED"],
+"SuspiciousActivityType":["UNSPECIFIED","UNUSUAL_TRANSACTION","IDENTITY_FRAUD","STRUCTURING","SANCTIONS_MATCH"],
+"RegulatoryReportType":["UNSPECIFIED","APRA_CPS234","OAIC_NDB","AUSTRAC_AML","ASIC_AFSL","PRIVACY_AUDIT"],
+"ServingStatus":["UNKNOWN","SERVING","NOT_SERVING","SERVICE_UNKNOWN"],
+};
+
+const PRIM=new Set(["string","int32","int64","double","bool","bytes","float","uint32","uint64","Timestamp","FieldMask"]);
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function baseT(t){return t.replace(/^repeated\s+/,'');}
+
+function renderMsg(name,label,lclass,depth){
+  depth=depth||0;
+  const msg=M[name];
+  const fc=msg?msg.f.length:0;
+  const hdr=`<div class="msg-header"><span class="msg-title">${name}</span><span class="msg-label ${lclass}">${label}</span><span class="msg-field-count">${fc} field${fc!==1?'s':''}</span></div>`;
+  if(!msg||fc===0) return `<div class="msg-block">${hdr}<div class="empty-msg">No request body required</div></div>`;
+  let rows=msg.f.map(f=>{
+    const bt=baseT(f.t);
+    let typeHtml=`<span class="field-type">${esc(f.t)}</span>`;
+    let nested='';
+    const nid='n_'+name+'_'+f.n+'_'+depth+'_'+(Math.random()*1e6|0);
+    if(M[bt]){
+      typeHtml=`<span class="field-type clickable" onclick="event.stopPropagation();toggleN('${nid}')">${esc(f.t)} ▸</span>`;
+      if(depth<3) nested=`<tr id="${nid}" class="hidden"><td colspan="3" style="padding:0 0 0 1.5rem!important"><div class="nested-content">${renderMsg(bt,bt,'nested-label',depth+1)}</div></td></tr>`;
+    } else if(E[bt]){
+      typeHtml=`<span class="field-type clickable" onclick="event.stopPropagation();toggleN('${nid}')">${esc(f.t)} ▸</span>`;
+      nested=`<tr id="${nid}" class="hidden"><td colspan="3" style="padding:0 0 0 1.5rem!important"><div class="nested-content"><div class="msg-block"><div class="msg-header"><span class="msg-title">${bt}</span><span class="msg-label enum-label">enum</span></div><div class="enum-values">${E[bt].map(v=>`<span class="enum-val">${v}</span>`).join('')}</div></div></div></td></tr>`;
+    }
+    return `<tr><td><span class="field-name">${f.n}</span></td><td>${typeHtml}</td><td><span class="field-desc">${esc(f.d)}</span></td></tr>${nested}`;
+  }).join('');
+  return `<div class="msg-block">${hdr}<table class="field-table"><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function toggleN(id){const e=document.getElementById(id);if(e)e.classList.toggle('hidden');}
+
+// ══════════════════════════════════════════════════
+// API DATA
+// ══════════════════════════════════════════════════
+const API_DATA=[
+{service:"UserService",icon:"👤",proto:"proto/smartsuper/user/v1/user_service.proto",description:"User registration, authentication, profile, KYC, and consent management",rpcs:[
+{name:"Register",method:"POST",rest:"/v1/auth/register",desc:"Register new user account",visibility:"external",status:"live",auth:"none",scopes:[],req:"RegisterRequest",res:"RegisterResponse"},
+{name:"Login",method:"POST",rest:"/v1/auth/login",desc:"Authenticate user and return tokens",visibility:"external",status:"live",auth:"none",scopes:[],req:"LoginRequest",res:"LoginResponse"},
+{name:"RefreshToken",method:"POST",rest:"/v1/auth/refresh",desc:"Exchange refresh token for new access token",visibility:"external",status:"live",auth:"bearer",scopes:["auth:refresh"],req:"RefreshTokenRequest",res:"RefreshTokenResponse"},
+{name:"Logout",method:"POST",rest:"/v1/auth/logout",desc:"Invalidate user session(s)",visibility:"ui",status:"live",auth:"bearer",scopes:["user:read"],req:"LogoutRequest",res:"LogoutResponse"},
+{name:"EnableMFA",method:"POST",rest:"/v1/auth/mfa/setup",desc:"Set up multi-factor authentication",visibility:"ui",status:"live",auth:"bearer",scopes:["user:write"],req:"EnableMFARequest",res:"EnableMFAResponse"},
+{name:"VerifyMFA",method:"POST",rest:"/v1/auth/mfa/verify",desc:"Validate MFA code and complete authentication",visibility:"external",status:"live",auth:"bearer",scopes:["auth:mfa"],req:"VerifyMFARequest",res:"VerifyMFAResponse"},
+{name:"GetProfile",method:"GET",rest:"/v1/users/me",desc:"Retrieve authenticated user's profile",visibility:"ui",status:"live",auth:"bearer",scopes:["user:read"],req:"GetProfileRequest",res:"GetProfileResponse"},
+{name:"UpdateProfile",method:"PATCH",rest:"/v1/users/me",desc:"Modify user profile fields",visibility:"ui",status:"live",auth:"bearer",scopes:["user:write"],req:"UpdateProfileRequest",res:"UpdateProfileResponse"},
+{name:"DeleteAccount",method:"DELETE",rest:"/v1/users/me",desc:"Permanently delete user account and data",visibility:"ui",status:"live",auth:"bearer",scopes:["user:delete"],req:"DeleteAccountRequest",res:"DeleteAccountResponse"},
+{name:"SubmitKYC",method:"POST",rest:"/v1/users/me/kyc",desc:"Submit identity verification documents",visibility:"ui",status:"live",auth:"bearer",scopes:["user:write"],req:"SubmitKYCRequest",res:"SubmitKYCResponse"},
+{name:"GetKYCStatus",method:"GET",rest:"/v1/users/me/kyc/status",desc:"Retrieve current KYC verification status",visibility:"ui",status:"live",auth:"bearer",scopes:["user:read"],req:"GetKYCStatusRequest",res:"GetKYCStatusResponse"},
+{name:"ListConsents",method:"GET",rest:"/v1/users/me/consents",desc:"List all consent records",visibility:"ui",status:"live",auth:"bearer",scopes:["user:read"],req:"ListConsentsRequest",res:"ListConsentsResponse"},
+{name:"GrantConsent",method:"POST",rest:"/v1/users/me/consents",desc:"Record user consent for data processing",visibility:"external",status:"live",auth:"bearer",scopes:["user:write"],req:"GrantConsentRequest",res:"GrantConsentResponse"},
+{name:"RevokeConsent",method:"DELETE",rest:"/v1/users/me/consents/{consent_id}",desc:"Withdraw a previously granted consent",visibility:"external",status:"live",auth:"bearer",scopes:["user:write"],req:"RevokeConsentRequest",res:"RevokeConsentResponse"},
+]},
+{service:"SuperFundService",icon:"💰",proto:"proto/smartsuper/super/v1/super_fund_service.proto",description:"Super fund accounts, balances, contributions, fees, insurance, performance, fund comparison",rpcs:[
+{name:"LinkAccount",method:"POST",rest:"/v1/super/accounts",desc:"Link a super fund account via USI + member number",visibility:"ui",status:"live",auth:"bearer",scopes:["super:write"],req:"LinkAccountRequest",res:"SuperAccount"},
+{name:"ListAccounts",method:"GET",rest:"/v1/super/accounts",desc:"List all linked super fund accounts",visibility:"ui",status:"live",auth:"bearer",scopes:["super:read"],req:"ListAccountsRequest",res:"ListAccountsResponse"},
+{name:"GetAccount",method:"GET",rest:"/v1/super/accounts/{account_id}",desc:"Get details of a specific account",visibility:"external",status:"live",auth:"bearer",scopes:["super:read"],req:"GetAccountRequest",res:"SuperAccount"},
+{name:"UnlinkAccount",method:"DELETE",rest:"/v1/super/accounts/{account_id}",desc:"Remove the link to an account",visibility:"ui",status:"live",auth:"bearer",scopes:["super:write"],req:"UnlinkAccountRequest",res:"UnlinkAccountResponse"},
+{name:"SyncAccount",method:"POST",rest:"/v1/super/accounts/{account_id}/sync",desc:"Trigger data sync with fund",visibility:"internal",status:"live",auth:"service",scopes:["super:sync"],req:"SyncAccountRequest",res:"SyncAccountResponse"},
+{name:"GetBalance",method:"GET",rest:"/v1/super/accounts/{account_id}/balance",desc:"Get current balance with allocation breakdown",visibility:"external",status:"live",auth:"bearer",scopes:["super:read"],req:"GetBalanceRequest",res:"BalanceResponse"},
+{name:"GetBalanceHistory",method:"GET",rest:"/v1/super/accounts/{account_id}/balance/history",desc:"Historical balance snapshots",visibility:"external",status:"live",auth:"bearer",scopes:["super:read"],req:"GetBalanceHistoryRequest",res:"BalanceHistoryResponse"},
+{name:"ListContributions",method:"GET",rest:"/v1/super/accounts/{account_id}/contributions",desc:"List contribution records",visibility:"external",status:"live",auth:"bearer",scopes:["super:read"],req:"ListContributionsRequest",res:"ListContributionsResponse"},
+{name:"GetContributionSummary",method:"GET",rest:"/v1/super/accounts/{account_id}/contributions/summary",desc:"Contribution summary with cap tracking",visibility:"external",status:"live",auth:"bearer",scopes:["super:read"],req:"GetContributionSummaryRequest",res:"ContributionSummary"},
+{name:"GetFeeBreakdown",method:"GET",rest:"/v1/super/accounts/{account_id}/fees",desc:"Itemised fee schedule",visibility:"external",status:"live",auth:"bearer",scopes:["super:read"],req:"GetFeeBreakdownRequest",res:"FeeBreakdown"},
+{name:"GetInsuranceDetails",method:"GET",rest:"/v1/super/accounts/{account_id}/insurance",desc:"Insurance cover details",visibility:"external",status:"live",auth:"bearer",scopes:["super:read"],req:"GetInsuranceDetailsRequest",res:"InsuranceDetails"},
+{name:"GetPerformance",method:"GET",rest:"/v1/super/accounts/{account_id}/performance",desc:"Performance metrics with benchmark comparison",visibility:"external",status:"live",auth:"bearer",scopes:["super:read"],req:"GetPerformanceRequest",res:"PerformanceResponse"},
+{name:"SearchFunds",method:"GET",rest:"/v1/super/funds",desc:"Search APRA fund registry",visibility:"external",status:"live",auth:"bearer",scopes:["super:read"],req:"SearchFundsRequest",res:"SearchFundsResponse"},
+{name:"GetFundDetails",method:"GET",rest:"/v1/super/funds/{fund_id}",desc:"Full fund details with options, fees, insurance, PDS",visibility:"external",status:"live",auth:"bearer",scopes:["super:read"],req:"GetFundDetailsRequest",res:"FundDetails"},
+{name:"CompareFunds",method:"POST",rest:"/v1/super/funds/compare",desc:"Side-by-side comparison with AI recommendation",visibility:"external",status:"live",auth:"bearer",scopes:["super:read"],req:"CompareFundsRequest",res:"CompareFundsResponse"},
+{name:"InitiateRollover",method:"POST",rest:"/v1/super/rollovers",desc:"Start fund rollover (full/partial)",visibility:"ui",status:"beta",auth:"bearer",scopes:["super:write"],req:"InitiateRolloverRequest",res:"RolloverResponse"},
+{name:"GetRolloverStatus",method:"GET",rest:"/v1/super/rollovers/{rollover_id}",desc:"Track rollover progress",visibility:"ui",status:"beta",auth:"bearer",scopes:["super:read"],req:"GetRolloverStatusRequest",res:"RolloverResponse"},
+]},
+{service:"TaxService",icon:"🧾",proto:"proto/smartsuper/tax/v1/tax_service.proto",description:"Tax estimation, Division 293, contribution caps, deductions, tax reporting",rpcs:[
+{name:"CalculateTaxEstimate",method:"POST",rest:"/v1/tax/estimate",desc:"Comprehensive tax estimate with Division 293 and savings",visibility:"external",status:"live",auth:"bearer",scopes:["tax:read"],req:"CalculateTaxEstimateRequest",res:"CalculateTaxEstimateResponse"},
+{name:"GetTaxEstimate",method:"GET",rest:"/v1/tax/estimate/{estimate_id}",desc:"Retrieve a saved tax estimate",visibility:"external",status:"live",auth:"bearer",scopes:["tax:read"],req:"GetTaxEstimateRequest",res:"GetTaxEstimateResponse"},
+{name:"GetContributionCaps",method:"GET",rest:"/v1/tax/contributions/caps",desc:"Cap details with carry-forward and bring-forward",visibility:"external",status:"live",auth:"bearer",scopes:["tax:read"],req:"GetContributionCapsRequest",res:"GetContributionCapsResponse"},
+{name:"AssessDivision293",method:"POST",rest:"/v1/tax/division293",desc:"Division 293 tax liability (income > $250k)",visibility:"external",status:"live",auth:"bearer",scopes:["tax:read"],req:"AssessDivision293Request",res:"AssessDivision293Response"},
+{name:"GetDivision293History",method:"GET",rest:"/v1/tax/division293/history",desc:"Historical Division 293 assessments",visibility:"ui",status:"live",auth:"bearer",scopes:["tax:read"],req:"GetDivision293HistoryRequest",res:"GetDivision293HistoryResponse"},
+{name:"CreateDeductionNotice",method:"POST",rest:"/v1/tax/deductions",desc:"Lodge personal contribution deduction notice",visibility:"ui",status:"live",auth:"bearer",scopes:["tax:write"],req:"CreateDeductionNoticeRequest",res:"CreateDeductionNoticeResponse"},
+{name:"ListDeductions",method:"GET",rest:"/v1/tax/deductions",desc:"List deduction notices",visibility:"ui",status:"live",auth:"bearer",scopes:["tax:read"],req:"ListDeductionsRequest",res:"ListDeductionsResponse"},
+{name:"AcknowledgeDeduction",method:"POST",rest:"/v1/tax/deductions/{deduction_id}/acknowledge",desc:"Record fund acknowledgement",visibility:"internal",status:"live",auth:"service",scopes:["tax:write"],req:"AcknowledgeDeductionRequest",res:"AcknowledgeDeductionResponse"},
+{name:"GetAnnualTaxReport",method:"GET",rest:"/v1/tax/report/{financial_year}",desc:"Annual tax report with ATO pre-fill",visibility:"external",status:"live",auth:"bearer",scopes:["tax:read"],req:"GetAnnualTaxReportRequest",res:"GetAnnualTaxReportResponse"},
+{name:"GetTaxOptimisations",method:"GET",rest:"/v1/tax/optimisations",desc:"AI tax optimisation strategies",visibility:"ui",status:"beta",auth:"bearer",scopes:["tax:read","ai:read"],req:"GetTaxOptimisationsRequest",res:"GetTaxOptimisationsResponse"},
+]},
+{service:"AIInsightsService",icon:"🤖",proto:"proto/smartsuper/ai/v1/ai_insights_service.proto",description:"AI recommendations, chat, retirement projections, anomaly detection, statement parsing",rpcs:[
+{name:"GetRecommendations",method:"GET",rest:"/v1/ai/recommendations",desc:"Personalised AI recommendations",visibility:"external",status:"live",auth:"bearer",scopes:["ai:read"],req:"GetRecommendationsRequest",res:"GetRecommendationsResponse"},
+{name:"SubmitRecommendationFeedback",method:"POST",rest:"/v1/ai/recommendations/{id}/feedback",desc:"Submit feedback on recommendation",visibility:"ui",status:"live",auth:"bearer",scopes:["ai:write"],req:"RecommendationFeedbackRequest",res:"RecommendationFeedbackResponse"},
+{name:"CreateChatSession",method:"POST",rest:"/v1/ai/chat/sessions",desc:"Create AI chat session",visibility:"ui",status:"live",auth:"bearer",scopes:["ai:read"],req:"CreateChatSessionRequest",res:"ChatSession"},
+{name:"SendMessage",method:"POST",rest:"/v1/ai/chat/sessions/{session_id}/messages",desc:"Send message to AI assistant",visibility:"ui",status:"live",auth:"bearer",scopes:["ai:read"],req:"SendMessageRequest",res:"ChatResponse"},
+{name:"StreamMessage",method:"SSE",rest:"/v1/ai/chat/sessions/{session_id}/stream",desc:"Stream AI response (SSE / gRPC streaming)",visibility:"ui",status:"live",auth:"bearer",scopes:["ai:read"],req:"SendMessageRequest",res:"ChatStreamChunk"},
+{name:"GetChatHistory",method:"GET",rest:"/v1/ai/chat/sessions/{session_id}/messages",desc:"Get chat message history",visibility:"ui",status:"live",auth:"bearer",scopes:["ai:read"],req:"GetChatHistoryRequest",res:"GetChatHistoryResponse"},
+{name:"PredictRetirement",method:"POST",rest:"/v1/ai/predictions/retirement",desc:"Monte Carlo retirement projection",visibility:"external",status:"live",auth:"bearer",scopes:["ai:read"],req:"RetirementProjectionRequest",res:"RetirementProjection"},
+{name:"PredictFundPerformance",method:"POST",rest:"/v1/ai/predictions/fund-performance",desc:"ML fund performance prediction",visibility:"external",status:"beta",auth:"bearer",scopes:["ai:read"],req:"FundPerformancePredictionRequest",res:"FundPerformancePrediction"},
+{name:"GetAnomalies",method:"GET",rest:"/v1/ai/anomalies",desc:"Detect contribution/fee anomalies",visibility:"ui",status:"live",auth:"bearer",scopes:["ai:read"],req:"GetAnomaliesRequest",res:"GetAnomaliesResponse"},
+{name:"DismissAnomaly",method:"POST",rest:"/v1/ai/anomalies/{anomaly_id}/dismiss",desc:"Dismiss an anomaly",visibility:"ui",status:"live",auth:"bearer",scopes:["ai:write"],req:"DismissAnomalyRequest",res:"DismissAnomalyResponse"},
+{name:"ParseStatement",method:"POST",rest:"/v1/ai/statements/parse",desc:"Parse super statement PDF via Document AI + Gemini",visibility:"external",status:"live",auth:"bearer",scopes:["statement:upload"],req:"ParseStatementRequest",res:"ParseStatementJob"},
+{name:"GetParseStatus",method:"GET",rest:"/v1/ai/statements/parse/{job_id}/status",desc:"Check parsing progress",visibility:"ui",status:"live",auth:"bearer",scopes:["statement:upload"],req:"GetParseStatusRequest",res:"ParseStatementJob"},
+{name:"GetParsedResult",method:"GET",rest:"/v1/ai/statements/parse/{job_id}/result",desc:"Get parsed statement data",visibility:"external",status:"live",auth:"bearer",scopes:["statement:upload"],req:"GetParsedResultRequest",res:"ParsedStatement"},
+]},
+{service:"DocumentService",icon:"📄",proto:"proto/smartsuper/document/v1/document_service.proto",description:"Document upload, parsing pipeline, document management",rpcs:[
+{name:"UploadStatement",method:"POST",rest:"/v1/statements/upload",desc:"Upload statement PDF (max 10MB)",visibility:"external",status:"live",auth:"bearer",scopes:["statement:upload"],req:"UploadStatementRequest",res:"UploadStatementResponse"},
+{name:"GetParseStatus",method:"GET",rest:"/v1/statements/{job_id}/status",desc:"Parsing pipeline status",visibility:"external",status:"live",auth:"bearer",scopes:["statement:upload"],req:"GetParseStatusRequest",res:"ParseJobStatus"},
+{name:"GetParsedStatement",method:"GET",rest:"/v1/statements/{document_id}",desc:"Parsed statement with confidence scores",visibility:"external",status:"live",auth:"bearer",scopes:["statement:upload"],req:"GetParsedStatementRequest",res:"ParsedStatement"},
+{name:"ListDocuments",method:"GET",rest:"/v1/statements",desc:"List uploaded documents",visibility:"ui",status:"live",auth:"bearer",scopes:["statement:upload"],req:"ListDocumentsRequest",res:"ListDocumentsResponse"},
+{name:"GetDocument",method:"GET",rest:"/v1/statements/{document_id}/meta",desc:"Get document metadata",visibility:"ui",status:"live",auth:"bearer",scopes:["statement:upload"],req:"GetDocumentRequest",res:"Document"},
+{name:"DeleteDocument",method:"DELETE",rest:"/v1/statements/{document_id}",desc:"Delete a document",visibility:"ui",status:"live",auth:"bearer",scopes:["statement:upload"],req:"DeleteDocumentRequest",res:"DeleteDocumentResponse"},
+{name:"RetryParsing",method:"POST",rest:"/v1/statements/{document_id}/retry",desc:"Retry failed parsing",visibility:"internal",status:"live",auth:"service",scopes:["statement:admin"],req:"RetryParsingRequest",res:"ParseJobStatus"},
+]},
+{service:"NotificationService",icon:"🔔",proto:"proto/smartsuper/notification/v1/notification_service.proto",description:"Multi-channel notifications, device registration, preferences",rpcs:[
+{name:"ListNotifications",method:"GET",rest:"/v1/notifications",desc:"List notifications with filters",visibility:"ui",status:"live",auth:"bearer",scopes:["notification:read"],req:"ListNotificationsRequest",res:"ListNotificationsResponse"},
+{name:"MarkAsRead",method:"POST",rest:"/v1/notifications/{notification_id}/read",desc:"Mark notification as read",visibility:"ui",status:"live",auth:"bearer",scopes:["notification:write"],req:"MarkAsReadRequest",res:"MarkAsReadResponse"},
+{name:"MarkAllAsRead",method:"POST",rest:"/v1/notifications/read-all",desc:"Mark all as read",visibility:"ui",status:"live",auth:"bearer",scopes:["notification:write"],req:"MarkAllAsReadRequest",res:"MarkAllAsReadResponse"},
+{name:"GetUnreadCount",method:"GET",rest:"/v1/notifications/unread-count",desc:"Unread count by category",visibility:"ui",status:"live",auth:"bearer",scopes:["notification:read"],req:"GetUnreadCountRequest",res:"UnreadCountResponse"},
+{name:"GetPreferences",method:"GET",rest:"/v1/notifications/preferences",desc:"Get notification preferences",visibility:"ui",status:"live",auth:"bearer",scopes:["notification:read"],req:"GetPreferencesRequest",res:"NotificationPreferences"},
+{name:"UpdatePreferences",method:"PUT",rest:"/v1/notifications/preferences",desc:"Update preferences + quiet hours",visibility:"ui",status:"live",auth:"bearer",scopes:["notification:write"],req:"UpdatePreferencesRequest",res:"NotificationPreferences"},
+{name:"RegisterDevice",method:"POST",rest:"/v1/notifications/devices",desc:"Register iOS device (APNs)",visibility:"ui",status:"live",auth:"bearer",scopes:["notification:write"],req:"RegisterDeviceRequest",res:"Device"},
+{name:"ListDevices",method:"GET",rest:"/v1/notifications/devices",desc:"List registered devices",visibility:"ui",status:"live",auth:"bearer",scopes:["notification:read"],req:"ListDevicesRequest",res:"ListDevicesResponse"},
+{name:"UnregisterDevice",method:"DELETE",rest:"/v1/notifications/devices/{device_id}",desc:"Unregister device",visibility:"ui",status:"live",auth:"bearer",scopes:["notification:write"],req:"UnregisterDeviceRequest",res:"UnregisterDeviceResponse"},
+{name:"SendNotification",method:"POST",rest:"/v1/internal/notifications/send",desc:"Service-to-service notification",visibility:"internal",status:"live",auth:"service",scopes:["notification:admin"],req:"SendNotificationRequest",res:"SendNotificationResponse"},
+{name:"SendBulkNotification",method:"POST",rest:"/v1/internal/notifications/send-bulk",desc:"Bulk notifications",visibility:"internal",status:"live",auth:"service",scopes:["notification:admin"],req:"SendBulkNotificationRequest",res:"SendBulkNotificationResponse"},
+]},
+{service:"ComplianceService",icon:"🛡️",proto:"proto/smartsuper/compliance/v1/compliance_service.proto",description:"Audit logging, AML/CTF, privacy requests, regulatory reports (APRA/ATO/ASIC/OAIC/AUSTRAC)",rpcs:[
+{name:"GetAuditLog",method:"GET",rest:"/v1/admin/audit/{entry_id}",desc:"Get audit log entry",visibility:"internal",status:"live",auth:"service",scopes:["admin:audit"],req:"GetAuditLogRequest",res:"GetAuditLogResponse"},
+{name:"SearchAuditLogs",method:"GET",rest:"/v1/admin/audit",desc:"Search audit logs",visibility:"internal",status:"live",auth:"service",scopes:["admin:audit"],req:"SearchAuditLogsRequest",res:"SearchAuditLogsResponse"},
+{name:"ListUserConsents",method:"GET",rest:"/v1/admin/compliance/consents/{user_id}",desc:"Admin: user consent records",visibility:"internal",status:"live",auth:"service",scopes:["admin:compliance"],req:"ListUserConsentsRequest",res:"ListUserConsentsResponse"},
+{name:"GetConsentAuditTrail",method:"GET",rest:"/v1/admin/compliance/consents/{user_id}/audit",desc:"Consent history/versions",visibility:"internal",status:"live",auth:"service",scopes:["admin:compliance"],req:"GetConsentAuditTrailRequest",res:"GetConsentAuditTrailResponse"},
+{name:"SubmitPrivacyRequest",method:"POST",rest:"/v1/privacy/requests",desc:"Submit privacy request (access/deletion/export)",visibility:"external",status:"live",auth:"bearer",scopes:["user:read"],req:"SubmitPrivacyRequestRequest",res:"PrivacyRequest"},
+{name:"GetPrivacyRequestStatus",method:"GET",rest:"/v1/privacy/requests/{request_id}",desc:"Track privacy request (30-day deadline)",visibility:"external",status:"live",auth:"bearer",scopes:["user:read"],req:"GetPrivacyRequestStatusRequest",res:"PrivacyRequest"},
+{name:"ListPrivacyRequests",method:"GET",rest:"/v1/privacy/requests",desc:"List privacy requests",visibility:"ui",status:"live",auth:"bearer",scopes:["user:read"],req:"ListPrivacyRequestsRequest",res:"ListPrivacyRequestsResponse"},
+{name:"GetAMLStatus",method:"GET",rest:"/v1/admin/compliance/aml/{user_id}",desc:"AML/CTF risk status",visibility:"internal",status:"live",auth:"service",scopes:["admin:compliance"],req:"GetAMLStatusRequest",res:"AMLStatus"},
+{name:"ReportSuspiciousActivity",method:"POST",rest:"/v1/admin/compliance/aml/suspicious",desc:"Report to AUSTRAC",visibility:"internal",status:"live",auth:"service",scopes:["admin:compliance"],req:"ReportSuspiciousActivityRequest",res:"SuspiciousActivityReport"},
+{name:"GenerateRegulatoryReport",method:"POST",rest:"/v1/admin/compliance/reports",desc:"Generate regulatory report",visibility:"internal",status:"live",auth:"service",scopes:["admin:compliance"],req:"GenerateRegulatoryReportRequest",res:"RegulatoryReport"},
+{name:"ListRegulatoryReports",method:"GET",rest:"/v1/admin/compliance/reports",desc:"List regulatory reports",visibility:"internal",status:"live",auth:"service",scopes:["admin:compliance"],req:"ListRegulatoryReportsRequest",res:"ListRegulatoryReportsResponse"},
+{name:"GetRetentionPolicy",method:"GET",rest:"/v1/admin/compliance/retention",desc:"Data retention policies",visibility:"internal",status:"live",auth:"service",scopes:["admin:compliance"],req:"GetRetentionPolicyRequest",res:"RetentionPolicy"},
+]},
+{service:"Health",icon:"💚",proto:"proto/smartsuper/common/v1/common.proto",description:"gRPC Health Checking Protocol",rpcs:[
+{name:"Check",method:"GET",rest:"/v1/health",desc:"Health check",visibility:"external",status:"live",auth:"none",scopes:[],req:"HealthCheckRequest",res:"HealthCheckResponse"},
+{name:"Watch",method:"SSE",rest:"/v1/health/watch",desc:"Stream health status",visibility:"internal",status:"live",auth:"service",scopes:[],req:"HealthCheckRequest",res:"HealthCheckResponse"},
+]},
 ];
 
-let currentRole = 'all';
-let currentStatus = 'all';
-let currentSearch = '';
-let openSections = new Set();
+// ══════════════════════════════════════════════════
+// UI STATE
+// ══════════════════════════════════════════════════
+let currentRole='all',currentStatus='all',currentSearch='';
+let openSections=new Set(),expandedRPCs=new Set();
+API_DATA.forEach((_,i)=>openSections.add(i));
 
-// Init: open all sections
-API_DATA.forEach((s,i) => openSections.add(i));
+function setRole(r,b){currentRole=r;document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active'));b.classList.add('active');document.getElementById('disclaimer').classList.toggle('hidden',r!=='external');render();}
+function setStatus(s,b){currentStatus=s;document.querySelectorAll('.status-btn').forEach(t=>t.classList.remove('active'));b.classList.add('active');render();}
+function expandAll(){API_DATA.forEach((_,i)=>openSections.add(i));render();}
+function collapseAll(){openSections.clear();expandedRPCs.clear();render();}
+function toggleSection(i){openSections.has(i)?openSections.delete(i):openSections.add(i);render();}
+function toggleRPC(k){expandedRPCs.has(k)?expandedRPCs.delete(k):expandedRPCs.add(k);render();}
 
-function setRole(role, btn) {
-  currentRole = role;
-  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('disclaimer').classList.toggle('hidden', role !== 'external');
-  render();
-}
+function matchVis(r){if(currentRole==='all')return true;if(currentRole==='external')return r.visibility==='external';if(currentRole==='ui')return r.visibility==='ui'||r.visibility==='external';return true;}
+function matchStat(r){return currentStatus==='all'||r.status===currentStatus;}
+function matchSearch(r,s){if(!currentSearch)return true;const q=currentSearch.toLowerCase();return r.name.toLowerCase().includes(q)||r.rest.toLowerCase().includes(q)||r.desc.toLowerCase().includes(q)||s.service.toLowerCase().includes(q)||r.scopes.some(x=>x.toLowerCase().includes(q))||(r.req&&r.req.toLowerCase().includes(q))||(r.res&&r.res.toLowerCase().includes(q));}
 
-function setStatus(status, btn) {
-  currentStatus = status;
-  document.querySelectorAll('.status-btn').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  render();
-}
-
-function expandAll() { API_DATA.forEach((s,i) => openSections.add(i)); render(); }
-function collapseAll() { openSections.clear(); render(); }
-
-function toggleSection(idx) {
-  if (openSections.has(idx)) openSections.delete(idx); else openSections.add(idx);
-  render();
-}
-
-function matchesVisibility(rpc) {
-  if (currentRole === 'all') return true;
-  if (currentRole === 'external') return rpc.visibility === 'external';
-  if (currentRole === 'ui') return rpc.visibility === 'ui' || rpc.visibility === 'external';
-  if (currentRole === 'internal') return true;
-  return true;
-}
-
-function matchesStatus(rpc) {
-  return currentStatus === 'all' || rpc.status === currentStatus;
-}
-
-function matchesSearch(rpc, service) {
-  if (!currentSearch) return true;
-  const q = currentSearch.toLowerCase();
-  return rpc.name.toLowerCase().includes(q) ||
-         rpc.rest.toLowerCase().includes(q) ||
-         rpc.desc.toLowerCase().includes(q) ||
-         service.service.toLowerCase().includes(q) ||
-         rpc.scopes.some(s => s.toLowerCase().includes(q));
-}
-
-function getMethodClass(method) {
-  return 'method-' + method.toLowerCase();
-}
-
-function render() {
-  let totalRPCs = 0, visibleRPCs = 0, liveCount = 0, betaCount = 0, plannedCount = 0;
-  let serviceCount = 0;
-
-  const servicesHTML = API_DATA.map((svc, idx) => {
-    const filteredRPCs = svc.rpcs.filter(r => matchesVisibility(r) && matchesStatus(r) && matchesSearch(r, svc));
-    totalRPCs += svc.rpcs.length;
-    visibleRPCs += filteredRPCs.length;
-    filteredRPCs.forEach(r => {
-      if (r.status === 'live') liveCount++;
-      else if (r.status === 'beta') betaCount++;
-      else if (r.status === 'planned') plannedCount++;
-    });
-
-    if (filteredRPCs.length === 0) return '';
-    serviceCount++;
-
-    const isOpen = openSections.has(idx);
-    const visTag = currentRole !== 'all' ? `<span class="badge visibility-tag vis-${currentRole}">${currentRole}</span>` : '';
-
-    let tableHTML = '';
-    if (isOpen) {
-      const rows = filteredRPCs.map(r => `
-        <tr>
-          <td><span class="method-badge ${getMethodClass(r.method)}">${r.method}</span></td>
-          <td>
-            <div class="endpoint">${r.rest}</div>
-            <div class="rpc-desc">${r.desc}</div>
-          </td>
+function render(){
+  let total=0,visible=0,live=0,beta=0,planned=0,svcCount=0;
+  const html=API_DATA.map((svc,idx)=>{
+    const filtered=svc.rpcs.filter(r=>matchVis(r)&&matchStat(r)&&matchSearch(r,svc));
+    total+=svc.rpcs.length;visible+=filtered.length;
+    filtered.forEach(r=>{if(r.status==='live')live++;else if(r.status==='beta')beta++;else if(r.status==='planned')planned++;});
+    if(!filtered.length)return '';
+    svcCount++;
+    const isOpen=openSections.has(idx);
+    const visTag=currentRole!=='all'?`<span class="badge visibility-tag vis-${currentRole}">${currentRole}</span>`:'';
+    let table='';
+    if(isOpen){
+      const rows=filtered.map(r=>{
+        const k=svc.service+'.'+r.name;
+        const exp=expandedRPCs.has(k);
+        let detail='';
+        if(exp){
+          detail=`<tr class="detail-panel"><td colspan="6"><div class="detail-inner">
+            <div class="proto-path">📁 ${svc.proto} → rpc ${r.name}(${r.req}) returns (${r.res})</div>
+            <div class="detail-grid">
+              <div>${renderMsg(r.req,'Request','req')}</div>
+              <div>${renderMsg(r.res,'Response','res')}</div>
+            </div>
+          </div></td></tr>`;
+        }
+        return `<tr class="rpc-row ${exp?'expanded':''}" onclick="toggleRPC('${k}')">
+          <td><span class="expand-icon ${exp?'open':''}">▶</span><span class="method-badge method-${r.method.toLowerCase()}">${r.method}</span></td>
+          <td><div class="endpoint">${r.rest}</div><div class="rpc-desc">${r.desc}</div></td>
           <td><code style="font-size:0.82rem;color:var(--accent-light)">${r.name}</code></td>
           <td><span class="visibility-tag vis-${r.visibility}">${r.visibility}</span></td>
           <td><span class="status-tag status-${r.status}">${r.status}</span></td>
-          <td><span class="auth-tag">${r.auth === 'none' ? '🔓 Public' : r.auth === 'service' ? '🔑 Service' : '🔒 ' + r.scopes.join(', ')}</span></td>
-        </tr>
-      `).join('');
-
-      tableHTML = `<table class="rpc-table">
-        <thead><tr><th style="width:70px">Method</th><th>Endpoint</th><th>gRPC RPC</th><th style="width:80px">Scope</th><th style="width:70px">Status</th><th>Auth / Scopes</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
+          <td><span class="auth-tag">${r.auth==='none'?'🔓 Public':r.auth==='service'?'🔑 Service':'🔒 '+r.scopes.join(', ')}</span></td>
+        </tr>${detail}`;
+      }).join('');
+      table=`<table class="rpc-table"><thead><tr><th style="width:90px">Method</th><th>Endpoint</th><th>gRPC RPC</th><th style="width:80px">Scope</th><th style="width:70px">Status</th><th>Auth / Scopes</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
-
     return `<div class="service-section">
-      <div class="service-header ${isOpen ? 'open' : ''}" onclick="toggleSection(${idx})">
-        <span class="icon">${svc.icon}</span>
-        <h2>${svc.service}</h2>
-        ${visTag}
-        <span class="count">${filteredRPCs.length} endpoint${filteredRPCs.length !== 1 ? 's' : ''}</span>
-        <span class="proto-ref">${svc.proto}</span>
-        <span class="chevron">▶</span>
-      </div>
-      ${tableHTML}
-    </div>`;
+      <div class="service-header ${isOpen?'open':''}" onclick="toggleSection(${idx})">
+        <span class="icon">${svc.icon}</span><h2>${svc.service}</h2>${visTag}
+        <span class="count">${filtered.length} endpoint${filtered.length!==1?'s':''}</span>
+        <span class="proto-ref">${svc.proto}</span><span class="chevron">▶</span>
+      </div>${table}</div>`;
   }).filter(Boolean).join('');
-
-  document.getElementById('services').innerHTML = servicesHTML;
-  document.getElementById('noResults').classList.toggle('hidden', servicesHTML.length > 0);
-
-  document.getElementById('stats').innerHTML = `
-    <div class="stat-card"><div class="number">${serviceCount}</div><div class="label">Services</div></div>
-    <div class="stat-card"><div class="number">${visibleRPCs}</div><div class="label">Endpoints Visible</div></div>
-    <div class="stat-card"><div class="number" style="color:var(--green)">${liveCount}</div><div class="label">🟢 Live</div></div>
-    <div class="stat-card"><div class="number" style="color:var(--blue)">${betaCount}</div><div class="label">🔵 Beta</div></div>
-    <div class="stat-card"><div class="number" style="color:var(--yellow)">${plannedCount}</div><div class="label">🟡 Planned</div></div>
-    <div class="stat-card"><div class="number">${totalRPCs}</div><div class="label">Total (All Roles)</div></div>
-  `;
+  document.getElementById('services').innerHTML=html;
+  document.getElementById('noResults').classList.toggle('hidden',html.length>0);
+  document.getElementById('stats').innerHTML=`
+    <div class="stat-card"><div class="number">${svcCount}</div><div class="label">Services</div></div>
+    <div class="stat-card"><div class="number">${visible}</div><div class="label">Endpoints Visible</div></div>
+    <div class="stat-card"><div class="number" style="color:var(--green)">${live}</div><div class="label">🟢 Live</div></div>
+    <div class="stat-card"><div class="number" style="color:var(--blue)">${beta}</div><div class="label">🔵 Beta</div></div>
+    <div class="stat-card"><div class="number" style="color:var(--yellow)">${planned}</div><div class="label">🟡 Planned</div></div>
+    <div class="stat-card"><div class="number">${total}</div><div class="label">Total (All Roles)</div></div>`;
 }
-
-document.getElementById('searchInput').addEventListener('input', (e) => {
-  currentSearch = e.target.value;
-  render();
-});
-
+document.getElementById('searchInput').addEventListener('input',e=>{currentSearch=e.target.value;render();});
 render();
 </script>
 </body>
