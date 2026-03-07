@@ -136,7 +136,7 @@
     <div class="subtitle">gRPC + REST API Reference — Click any endpoint to explore Request/Response schemas</div>
     <div class="meta">
       <span>📌 Version: v1.0.0</span>
-      <span>📅 Updated: 2026-02-15</span>
+      <span>📅 Updated: 2026-03-07</span>
       <span>🔒 Auth: OAuth 2.0 + JWT</span>
       <span>🌏 Region: australia-southeast1</span>
       <span>📡 Transport: gRPC (HTTP/2) + REST (TLS 1.3)</span>
@@ -176,7 +176,7 @@
     <span style="margin-left:auto;font-size:0.78rem;color:var(--text-muted);font-style:italic">💡 Click any endpoint row to see Request / Response proto schemas</span>
   </div>
   <div id="disclaimer" class="disclaimer hidden">
-    ⚠️ <strong>External / Vendor View:</strong> You are viewing only the APIs available for third-party integration. Internal service-to-service and mobile-specific APIs are hidden. Contact <strong>api@smartsuper.com.au</strong> for API key access.
+    ⚠️ <strong>External / Vendor View:</strong> You are viewing only the APIs available for third-party integration. Internal service-to-service and mobile-specific APIs are hidden. Contact <strong>api@smart-super.com.au</strong> for API key access.
   </div>
   <div class="content">
     <div class="stats" id="stats"></div>
@@ -185,7 +185,7 @@
   </div>
   <div class="footer">
     <p>SmartSuper API Console v2.0.0 — Interactive proto schema explorer — Auto-generated from Protocol Buffer definitions</p>
-    <p>Proto source: <code>smart-super-api/proto/smartsuper/</code> — Last sync: 2026-02-15</p>
+    <p>Proto source: <code>smart-super-api/proto/smartsuper/</code> — Last sync: 2026-03-07</p>
     <p>© 2026 SmartSuper Pty Ltd — ABN 12 345 678 901 — AFSL 123456</p>
   </div>
 <script>
@@ -592,9 +592,67 @@ const API_DATA=[
 {name:"ListRegulatoryReports",method:"GET",rest:"/v1/admin/compliance/reports",desc:"List regulatory reports",visibility:"internal",status:"live",auth:"service",scopes:["admin:compliance"],req:"ListRegulatoryReportsRequest",res:"ListRegulatoryReportsResponse"},
 {name:"GetRetentionPolicy",method:"GET",rest:"/v1/admin/compliance/retention",desc:"Data retention policies",visibility:"internal",status:"live",auth:"service",scopes:["admin:compliance"],req:"GetRetentionPolicyRequest",res:"RetentionPolicy"},
 ]},
+{service:"ExploreService",icon:"🔍",proto:"internal/explore/ (REST-only, PostgreSQL-backed)",description:"Explore Hub — 635 APRA funds, fund search/compare, SMSF providers, super news, investment options, admin fund status",rpcs:[
+{name:"SearchFunds",method:"GET",rest:"/v1/funds/search",desc:"Search 635 APRA funds with filtering, sorting, pagination (q, type, min/max members, sort, limit, offset)",visibility:"external",status:"live",auth:"bearer",scopes:["explore:read"],req:"SearchFundsQuery",res:"SearchFundsResponse"},
+{name:"GetFundProfile",method:"GET",rest:"/v1/funds/{id}",desc:"Full fund profile — fees, insurance, investment options, performance, compliance, APRA data",visibility:"external",status:"live",auth:"bearer",scopes:["explore:read"],req:"GetFundProfileRequest",res:"FundProfile"},
+{name:"CompareFunds",method:"POST",rest:"/v1/funds/compare",desc:"Side-by-side comparison of 2–5 funds with fee analysis, performance, risk metrics",visibility:"external",status:"live",auth:"bearer",scopes:["explore:read"],req:"CompareFundsRequest",res:"FundComparisonResponse"},
+{name:"GetDashboardComparison",method:"GET",rest:"/v1/dashboard/fund-comparison",desc:"Dashboard fund comparison widget — user's linked fund vs top performers",visibility:"ui",status:"live",auth:"bearer",scopes:["explore:read"],req:"DashboardComparisonRequest",res:"DashboardComparisonResponse"},
+{name:"GetDashboardBenchmark",method:"GET",rest:"/v1/dashboard/benchmark",desc:"Dashboard benchmark widget — fund performance vs SR50 / CPI+3% benchmarks",visibility:"ui",status:"live",auth:"bearer",scopes:["explore:read"],req:"DashboardBenchmarkRequest",res:"DashboardBenchmarkResponse"},
+{name:"GetSMSFProviders",method:"GET",rest:"/v1/explore/smsf/providers",desc:"List SMSF administration providers with features, pricing, ratings",visibility:"external",status:"live",auth:"bearer",scopes:["explore:read"],req:"GetSMSFProvidersRequest",res:"SMSFProvidersResponse"},
+{name:"GetSMSFGuides",method:"GET",rest:"/v1/explore/smsf/guides",desc:"SMSF educational guides — setup, compliance, investment rules, ATO obligations",visibility:"external",status:"live",auth:"bearer",scopes:["explore:read"],req:"GetSMSFGuidesRequest",res:"SMSFGuidesResponse"},
+{name:"GetSuperNews",method:"GET",rest:"/v1/explore/news",desc:"Latest superannuation news — regulatory changes, market updates, policy announcements",visibility:"external",status:"live",auth:"bearer",scopes:["explore:read"],req:"GetSuperNewsRequest",res:"SuperNewsResponse"},
+{name:"GetSuperOptions",method:"GET",rest:"/v1/explore/options",desc:"Browse super contribution & investment options — salary sacrifice, spouse, downsizer, FHSS",visibility:"external",status:"live",auth:"bearer",scopes:["explore:read"],req:"GetSuperOptionsRequest",res:"SuperOptionsResponse"},
+{name:"GetOptionDetail",method:"GET",rest:"/v1/explore/options/{id}",desc:"Detailed view of a specific super option with eligibility, limits, tax treatment",visibility:"external",status:"live",auth:"bearer",scopes:["explore:read"],req:"GetOptionDetailRequest",res:"OptionDetailResponse"},
+{name:"GetFundIngestionStatus",method:"GET",rest:"/v1/admin/funds/status",desc:"Admin: APRA fund data ingestion status — last sync, fund counts, data sources, errors",visibility:"internal",status:"live",auth:"service",scopes:["admin:funds"],req:"GetFundIngestionStatusRequest",res:"FundIngestionStatusResponse"},
+]},
 {service:"Health",icon:"💚",proto:"proto/smartsuper/common/v1/common.proto",description:"gRPC Health Checking Protocol",rpcs:[
 {name:"Check",method:"GET",rest:"/v1/health",desc:"Health check",visibility:"external",status:"live",auth:"none",scopes:[],req:"HealthCheckRequest",res:"HealthCheckResponse"},
 {name:"Watch",method:"SSE",rest:"/v1/health/watch",desc:"Stream health status",visibility:"internal",status:"live",auth:"service",scopes:[],req:"HealthCheckRequest",res:"HealthCheckResponse"},
+]},
+{service:"AdminService",icon:"⚙️",proto:"internal/admin/ (REST-only, RBAC middleware)",description:"Admin portal — admin users, customer management, support tickets, system health, analytics, audit log. 4 roles: super_admin, admin, support, viewer",rpcs:[
+{name:"AdminLogin",method:"POST",rest:"/v1/admin/auth/login",desc:"Admin login (returns JWT with role claim)",visibility:"internal",status:"live",auth:"none",scopes:[],req:"AdminLoginRequest",res:"AdminLoginResponse"},
+{name:"ListAdminUsers",method:"GET",rest:"/v1/admin/users",desc:"List all admin users",visibility:"internal",status:"live",auth:"jwt",scopes:["admin:read"],req:"",res:"AdminUsersListResponse"},
+{name:"CreateAdminUser",method:"POST",rest:"/v1/admin/users",desc:"Create admin user",visibility:"internal",status:"live",auth:"jwt",scopes:["admin:write"],req:"CreateAdminUserRequest",res:"AdminUserResponse"},
+{name:"GetAdminUser",method:"GET",rest:"/v1/admin/users/:id",desc:"Get admin user by ID",visibility:"internal",status:"live",auth:"jwt",scopes:["admin:read"],req:"",res:"AdminUserResponse"},
+{name:"UpdateAdminUser",method:"PUT",rest:"/v1/admin/users/:id",desc:"Update admin user",visibility:"internal",status:"live",auth:"jwt",scopes:["admin:write"],req:"UpdateAdminUserRequest",res:"AdminUserResponse"},
+{name:"DeleteAdminUser",method:"DELETE",rest:"/v1/admin/users/:id",desc:"Delete admin user",visibility:"internal",status:"live",auth:"jwt",scopes:["admin:delete"],req:"",res:""},
+{name:"ListCustomers",method:"GET",rest:"/v1/admin/customers",desc:"List app customers with search/filter",visibility:"internal",status:"live",auth:"jwt",scopes:["customer:read"],req:"",res:"CustomerListResponse"},
+{name:"GetCustomer",method:"GET",rest:"/v1/admin/customers/:id",desc:"Get customer detail",visibility:"internal",status:"live",auth:"jwt",scopes:["customer:read"],req:"",res:"CustomerDetailResponse"},
+{name:"GetCustomerAccounts",method:"GET",rest:"/v1/admin/customers/:id/accounts",desc:"Get customer super accounts",visibility:"internal",status:"live",auth:"jwt",scopes:["customer:read"],req:"",res:"CustomerAccountsResponse"},
+{name:"GetCustomerActivity",method:"GET",rest:"/v1/admin/customers/:id/activity",desc:"Get customer activity log",visibility:"internal",status:"live",auth:"jwt",scopes:["customer:read"],req:"",res:"CustomerActivityResponse"},
+{name:"UpdateCustomerStatus",method:"PATCH",rest:"/v1/admin/customers/:id/status",desc:"Update customer status (active/suspended/locked)",visibility:"internal",status:"live",auth:"jwt",scopes:["customer:write"],req:"UpdateStatusRequest",res:""},
+{name:"GetCustomerStats",method:"GET",rest:"/v1/admin/customers/stats",desc:"Customer stats (total, active, new)",visibility:"internal",status:"live",auth:"jwt",scopes:["customer:read"],req:"",res:"CustomerStatsResponse"},
+{name:"ListTickets",method:"GET",rest:"/v1/admin/support/tickets",desc:"List support tickets with filters",visibility:"internal",status:"live",auth:"jwt",scopes:["support:read"],req:"",res:"TicketListResponse"},
+{name:"CreateTicket",method:"POST",rest:"/v1/admin/support/tickets",desc:"Create support ticket (auto-number SS-000001)",visibility:"internal",status:"live",auth:"jwt",scopes:["support:write"],req:"CreateTicketRequest",res:"TicketResponse"},
+{name:"GetTicket",method:"GET",rest:"/v1/admin/support/tickets/:id",desc:"Get ticket detail",visibility:"internal",status:"live",auth:"jwt",scopes:["support:read"],req:"",res:"TicketDetailResponse"},
+{name:"UpdateTicket",method:"PUT",rest:"/v1/admin/support/tickets/:id",desc:"Update ticket (status, priority, assignee)",visibility:"internal",status:"live",auth:"jwt",scopes:["support:write"],req:"UpdateTicketRequest",res:"TicketResponse"},
+{name:"ListTicketMessages",method:"GET",rest:"/v1/admin/support/tickets/:id/messages",desc:"Get ticket message thread",visibility:"internal",status:"live",auth:"jwt",scopes:["support:read"],req:"",res:"TicketMessagesResponse"},
+{name:"EscalateTicket",method:"POST",rest:"/v1/admin/support/tickets/:id/escalate",desc:"Escalate ticket to higher priority",visibility:"internal",status:"live",auth:"jwt",scopes:["support:write"],req:"EscalateRequest",res:""},
+{name:"ListInteractions",method:"GET",rest:"/v1/admin/support/interactions",desc:"List phone/email interactions",visibility:"internal",status:"live",auth:"jwt",scopes:["support:read"],req:"",res:"InteractionsResponse"},
+{name:"GetTicketStats",method:"GET",rest:"/v1/admin/support/tickets/stats",desc:"Ticket stats (open, SLA breaches, avg resolution)",visibility:"internal",status:"live",auth:"jwt",scopes:["support:read"],req:"",res:"TicketStatsResponse"},
+{name:"GetSystemHealth",method:"GET",rest:"/v1/admin/health/overview",desc:"System health overview (all services)",visibility:"internal",status:"live",auth:"jwt",scopes:["health:read"],req:"",res:"SystemHealthResponse"},
+{name:"GetAPIHealth",method:"GET",rest:"/v1/admin/health/api",desc:"Go API health",visibility:"internal",status:"live",auth:"jwt",scopes:["health:read"],req:"",res:"ServiceHealthResponse"},
+{name:"GetDatabaseHealth",method:"GET",rest:"/v1/admin/health/database",desc:"Spanner + PostgreSQL health",visibility:"internal",status:"live",auth:"jwt",scopes:["health:read"],req:"",res:"ServiceHealthResponse"},
+{name:"GetAIHealth",method:"GET",rest:"/v1/admin/health/ai",desc:"AI Gateway health",visibility:"internal",status:"live",auth:"jwt",scopes:["health:read"],req:"",res:"ServiceHealthResponse"},
+{name:"GetWebHealth",method:"GET",rest:"/v1/admin/health/web",desc:"Web app health",visibility:"internal",status:"live",auth:"jwt",scopes:["health:read"],req:"",res:"ServiceHealthResponse"},
+{name:"GetHealthMetrics",method:"GET",rest:"/v1/admin/health/metrics",desc:"Request rate, error rate, latency metrics",visibility:"internal",status:"live",auth:"jwt",scopes:["health:read"],req:"",res:"HealthMetricsResponse"},
+{name:"GetUsageAnalytics",method:"GET",rest:"/v1/admin/analytics/usage",desc:"Feature usage analytics",visibility:"internal",status:"live",auth:"jwt",scopes:["analytics:read"],req:"",res:"UsageAnalyticsResponse"},
+{name:"GetActiveUsers",method:"GET",rest:"/v1/admin/analytics/active-users",desc:"DAU/WAU/MAU metrics",visibility:"internal",status:"live",auth:"jwt",scopes:["analytics:read"],req:"",res:"ActiveUsersResponse"},
+{name:"GetTopFeatures",method:"GET",rest:"/v1/admin/analytics/top-features",desc:"Top features by usage",visibility:"internal",status:"live",auth:"jwt",scopes:["analytics:read"],req:"",res:"TopFeaturesResponse"},
+{name:"GetUserGrowth",method:"GET",rest:"/v1/admin/analytics/user-growth",desc:"User growth trends",visibility:"internal",status:"live",auth:"jwt",scopes:["analytics:read"],req:"",res:"UserGrowthResponse"},
+{name:"ListAuditLog",method:"GET",rest:"/v1/admin/audit",desc:"Admin audit trail",visibility:"internal",status:"live",auth:"jwt",scopes:["audit:read"],req:"",res:"AuditLogResponse"},
+]},
+{service:"ProfessionalsService",icon:"👥",proto:"smart-super-professionals/ (REST-only, PostgreSQL-backed)",description:"Professionals directory — ASIC financial advisers, TPB tax/BAS agents, SMSF auditors. Search, bookings, reviews, comparison",rpcs:[
+{name:"SearchProfessionals",method:"GET",rest:"/v1/professionals/search",desc:"Search professionals with filters (category, state, name)",visibility:"external",status:"live",auth:"jwt",scopes:["professionals:read"],req:"",res:"ProfessionalSearchResponse"},
+{name:"GetProfessional",method:"GET",rest:"/v1/professionals/:id",desc:"Get professional detail",visibility:"external",status:"live",auth:"jwt",scopes:["professionals:read"],req:"",res:"ProfessionalDetailResponse"},
+{name:"ListCategories",method:"GET",rest:"/v1/professionals/categories",desc:"List professional categories with counts",visibility:"external",status:"live",auth:"jwt",scopes:["professionals:read"],req:"",res:"CategoriesResponse"},
+{name:"GetFeatured",method:"GET",rest:"/v1/professionals/featured",desc:"Featured/top-rated professionals",visibility:"external",status:"live",auth:"jwt",scopes:["professionals:read"],req:"",res:"FeaturedResponse"},
+{name:"CreateBooking",method:"POST",rest:"/v1/professionals/:id/bookings",desc:"Book a consultation",visibility:"ui",status:"live",auth:"jwt",scopes:["professionals:write"],req:"CreateBookingRequest",res:"BookingResponse"},
+{name:"ListBookings",method:"GET",rest:"/v1/professionals/bookings",desc:"List user bookings",visibility:"ui",status:"live",auth:"jwt",scopes:["professionals:read"],req:"",res:"BookingsListResponse"},
+{name:"CreateReview",method:"POST",rest:"/v1/professionals/:id/reviews",desc:"Submit a review",visibility:"ui",status:"live",auth:"jwt",scopes:["professionals:write"],req:"CreateReviewRequest",res:"ReviewResponse"},
+{name:"ListReviews",method:"GET",rest:"/v1/professionals/:id/reviews",desc:"List reviews for a professional",visibility:"external",status:"live",auth:"jwt",scopes:["professionals:read"],req:"",res:"ReviewsListResponse"},
+{name:"AdminListProfessionals",method:"GET",rest:"/v1/admin/professionals",desc:"Admin: list all professionals",visibility:"internal",status:"live",auth:"jwt",scopes:["admin:read"],req:"",res:"ProfessionalSearchResponse"},
+{name:"AdminIngestionStatus",method:"GET",rest:"/v1/admin/professionals/ingestion",desc:"Admin: data ingestion status",visibility:"internal",status:"live",auth:"jwt",scopes:["admin:read"],req:"",res:"IngestionStatusResponse"},
 ]},
 ];
 
